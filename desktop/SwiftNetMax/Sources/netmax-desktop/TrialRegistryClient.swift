@@ -142,7 +142,7 @@ struct TrialRegistryClient {
     /// MAX: set this to the deployed registry host before shipping trials.
     /// While the placeholder is present, activation short-circuits to
     /// .unreachable (fail-closed — no network to a bogus host).
-    static var defaultBaseURLString = "https://REPLACE-WITH-TRIAL-REGISTRY-HOST"
+    static var defaultBaseURLString = "https://drift-trial-registry.mubasharali24428.workers.dev"
 
     /// Offline grace: the cached server window is honored this long past its
     /// end without a successful revalidation, then Free until online again.
