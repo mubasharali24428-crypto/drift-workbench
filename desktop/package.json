@@ -6,7 +6,7 @@
   "type": "module",
   "main": "netmax-mcp-server.mjs",
   "bin": {
-    "netmax-mcp": "netmax-mcp-server.mjs"
+    "drift-workbench": "netmax-mcp-server.mjs"
   },
   "files": [
     "netmax-mcp-server.mjs",
@@ -23,6 +23,7 @@
     "zod": "3.25"
   },
   "keywords": [
+    "drift-workbench",
     "netmax",
     "mcp",
     "network",

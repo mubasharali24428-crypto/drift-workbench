@@ -18,7 +18,7 @@
  *
  *   Or via npx:
  *     command: npx
- *     args: ['-y', '@netmax/mcp-server']
+ *     args: ['-y', '@drift-workbench/mcp-server']
  *
  * Configuration (optional env vars):
  *   NETMAX_ROOT     - Path to the netmax app directory (default: auto-detected)
