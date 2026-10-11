@@ -29,16 +29,17 @@ export const TOOLS_SECTION = {
 };
 
 // Names and one-liners from drift-workbench-phase4-inputs.txt, in that order.
-// Three lines differ from the inputs file by one word each, because the original
+// Five lines differ from the inputs file by one word each, because the original
 // wording used banned marketing words (see CLAUDE.md): eco_bloat and
-// diagnostic_summary lost "Quick"; boost has "multi-stream" in place of "turbo".
+// diagnostic_summary lost "Quick"; boost has "multi-stream" in place of "turbo";
+// upload_speed and parallel_diagnostics have "throughput" in place of "speed".
 export const TOOLS = [
   { name: "measure_speed", description: "Download throughput, baseline vs multi-stream" },
-  { name: "upload_speed", description: "Upload speed in Mbps" },
+  { name: "upload_speed", description: "Upload throughput in Mbps" },
   { name: "download_file", description: "Multi-stream accelerated file download" },
   {
     name: "parallel_diagnostics",
-    description: "Speed, DNS, bloat and WiFi in one concurrent call",
+    description: "Throughput, DNS, bloat and WiFi in one concurrent call",
   },
   { name: "bufferbloat", description: "Latency under load, graded A+ to F" },
   { name: "eco_bloat", description: "Bufferbloat estimate using ~100KB of data" },
