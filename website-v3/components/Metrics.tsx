@@ -14,10 +14,10 @@ export function Metrics() {
               key={item.label}
               className="grid items-baseline gap-1 border-b border-border py-6 sm:grid-cols-[12rem_1fr] sm:gap-8"
             >
-              <dd className="font-display text-display-md font-semibold sm:order-first">
+              <dt className="text-body text-muted-foreground">{item.label}</dt>
+              <dd className="order-first font-display text-display-md font-semibold">
                 {item.value}
               </dd>
-              <dt className="text-body text-muted-foreground">{item.label}</dt>
             </div>
           ))}
         </dl>

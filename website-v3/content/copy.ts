@@ -164,7 +164,7 @@ export const FAQ = {
 
 export const FINAL_CTA = {
   heading: "Give your agent a way to see the network.",
-  sub: "One command. Free MCP server. Nothing leaves your machine.",
+  sub: "One command. Free MCP server. Zero telemetry.",
 } as const;
 
 export const FOOTER = {
