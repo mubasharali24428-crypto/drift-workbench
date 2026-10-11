@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PulseMark } from "@/components/PulseMark";
 import { NAV_LINKS } from "@/content/copy";
@@ -24,11 +25,17 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
-      <nav aria-label="Primary" className="mx-auto flex h-16 max-w-wide items-center justify-between px-4 sm:px-6">
-        <a href="/" className="inline-flex min-h-11 items-center gap-3 font-display text-body font-semibold">
+      <nav
+        aria-label="Primary"
+        className="mx-auto flex h-16 max-w-wide items-center justify-between px-4 sm:px-6"
+      >
+        <Link
+          href="/"
+          className="inline-flex min-h-11 items-center gap-3 font-display text-body font-semibold"
+        >
           <PulseMark className="size-6 text-accent" />
           Drift Workbench
-        </a>
+        </Link>
         <ul className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map((l) => (
             <li key={l.href}>
@@ -59,13 +66,24 @@ export function Nav() {
           className="inline-flex size-11 items-center justify-center rounded-md border border-border-strong md:hidden"
         >
           <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="size-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+            className="size-5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          >
             {open ? <path d="M6 6l12 12M18 6 6 18" /> : <path d="M4 8h16M4 16h16" />}
           </svg>
         </button>
       </nav>
       {open && (
-        <div id="mobile-menu" className="fixed inset-x-0 bottom-0 top-16 z-40 bg-background px-4 py-8 md:hidden">
+        <div
+          id="mobile-menu"
+          className="fixed inset-x-0 bottom-0 top-16 z-40 bg-background px-4 py-8 md:hidden"
+        >
           <ul className="flex flex-col">
             {[...NAV_LINKS, { label: "GitHub", href: SITE.repoUrl }].map((l) => (
               <li key={l.href} className="border-b border-border">

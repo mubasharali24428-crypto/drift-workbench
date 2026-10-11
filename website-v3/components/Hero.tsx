@@ -11,9 +11,7 @@ export function Hero() {
         <h1 className="mx-auto mt-6 max-w-5xl font-display text-display-xl font-semibold">
           {HERO.headline} <span className="text-accent">{HERO.headlineAccent}</span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-body-lg text-muted-foreground">
-          {HERO.subhead}
-        </p>
+        <p className="mx-auto mt-6 max-w-2xl text-body-lg text-muted-foreground">{HERO.subhead}</p>
         <div id="install" className="mt-10">
           <CommandBar />
           <a
@@ -24,7 +22,7 @@ export function Hero() {
           </a>
         </div>
       </div>
-      <div className="relative isolate mx-auto mt-16 max-w-wide md:mt-24">
+      <div data-parallax className="relative isolate mx-auto mt-16 max-w-wide md:mt-24">
         <div className="ambient-glow -z-10 scale-150" aria-hidden="true" />
         <Terminal />
       </div>

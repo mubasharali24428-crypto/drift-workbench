@@ -26,8 +26,6 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 /** Apply to <html className={fontVariables}> in app/layout.tsx. */
-export const fontVariables = [
-  spaceGrotesk.variable,
-  inter.variable,
-  jetbrainsMono.variable,
-].join(" ");
+export const fontVariables = [spaceGrotesk.variable, inter.variable, jetbrainsMono.variable].join(
+  " ",
+);
