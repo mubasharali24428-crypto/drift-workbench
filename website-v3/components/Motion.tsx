@@ -6,7 +6,7 @@ import { gsapEase, lenis, parallax, pinned, prefersReducedMotion, reveal } from 
 
 // Renders nothing. Loads GSAP, ScrollTrigger and Lenis after mount, so none of it is in
 // the first-load bundle. Under reduced motion it does nothing: the page stays static.
-const PIN_QUERY = "(min-width: 768px) and (min-height: 700px)";
+const PIN_QUERY = "(min-width: 768px) and (min-height: 800px)";
 
 export function Motion() {
   useEffect(() => {
@@ -68,7 +68,7 @@ export function Motion() {
             defaults: { ease: "none" },
             scrollTrigger: {
               trigger: pin,
-              start: "center center",
+              start: "top 80px",
               end: `+=${pinned.steps * pinned.vhPerStep}%`,
               pin: true,
               scrub: pinned.scrub,
