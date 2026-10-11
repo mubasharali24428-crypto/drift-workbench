@@ -78,8 +78,12 @@ export function Motion() {
         });
       });
 
-      window.addEventListener("load", () => ScrollTrigger.refresh());
+      // Positions depend on font metrics. fonts.ready also resolves if load already fired.
+      const refresh = () => ScrollTrigger.refresh();
+      document.fonts.ready.then(refresh);
+      window.addEventListener("load", refresh);
       cleanup = () => {
+        window.removeEventListener("load", refresh);
         ctx.revert();
         mm.revert();
         gsap.ticker.remove(tick);
