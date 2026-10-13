@@ -28,7 +28,7 @@ engine — nothing is installed system-wide).
 | **VS Code (Continue.dev)** | `~/.continue/config.json` → add `netmax` to `mcpServers` |
 
 **Desktop app (macOS 13+, universal build):** download the DMG from the
-[GitHub releases page](https://github.com/mubasharali24428-crypto/netmax/releases).
+[GitHub releases page](https://github.com/mubasharali24428-crypto/drift-workbench/releases).
 
 Tools: `measure_speed`, `dns_ranking`, `bufferbloat`, `upload_speed`, `packet_loss`,
 `jitter`, `wifi_info`, `download_file`, `eco_bloat`, `full_diagnostics`,
@@ -48,7 +48,7 @@ A double-clickable macOS **menu-bar app** wrapping today's Drift Workbench engin
 Swift shell (`SwiftNetMax/`) → Python bridge (`bridge/engine_bridge.py`) → engine modules (`netmax*.py`, `netmetrics.py`).
 
 Status: **Phase 0** — signed shell + honest-limits onboarding. Ad-hoc signed only; build, verify, and distribution notes live in
-[BUILD-NOTES.md](https://github.com/mubasharali24428-crypto/netmax/blob/main/desktop/docs/BUILD-NOTES.md).
+[BUILD-NOTES.md](https://github.com/mubasharali24428-crypto/drift-workbench/blob/main/desktop/docs/BUILD-NOTES.md).
 
 ## Python interpreter override (`NETMAX_PYTHON`)
 
@@ -65,5 +65,5 @@ All tooling defaults to the system `python3` but honors `NETMAX_PYTHON`:
 ## Further reading
 
 - [MCP-README.md](./MCP-README.md) — full tool reference (ships in the npm package).
-- [BUILD-NOTES.md](https://github.com/mubasharali24428-crypto/netmax/blob/main/desktop/docs/BUILD-NOTES.md) —
+- [BUILD-NOTES.md](https://github.com/mubasharali24428-crypto/drift-workbench/blob/main/desktop/docs/BUILD-NOTES.md) —
   internal build, verify-gate, and distribution notes (repo only, not shipped in npm).

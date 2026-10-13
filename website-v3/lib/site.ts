@@ -8,10 +8,10 @@ export const SITE = {
   installCommand: "npx -y @drift-workbench/mcp-server",
   npmUrl: "https://www.npmjs.com/package/@drift-workbench/mcp-server",
   // From `git remote get-url github` in the repo.
-  repoUrl: "https://github.com/mubasharali24428-crypto/netmax",
+  repoUrl: "https://github.com/mubasharali24428-crypto/drift-workbench",
   // Verified with `npm view @drift-workbench/mcp-server version`.
   npmVersion: "1.0.8",
-  licenseUrl: "https://github.com/mubasharali24428-crypto/netmax/blob/main/LICENSE",
+  licenseUrl: "https://github.com/mubasharali24428-crypto/drift-workbench/blob/main/LICENSE",
   // Existing Gumroad listing from landing-claims.md (NetMax Founding License). Confirm before launch.
   buyUrl: "https://mubasharali03.gumroad.com/l/yzkuez",
 } as const;
