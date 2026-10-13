@@ -9,7 +9,7 @@ struct FeatureDiscoverySection: View {
     let openTab: (Int) -> Void
 
     var body: some View {
-        Section("What NetMax can do") {
+        Section("What Drift Workbench can do") {
             featureRow(
                 icon: "chart.dots.scatter",
                 title: "Quality Timeline",

@@ -48,8 +48,6 @@ final class LicenseGate: ObservableObject {
 
     static let TRIAL_DAYS = 14
 
-    static let KEY_PATTERN = #"^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$"#
-
     enum Tier: Int, CaseIterable {
         case Free = 0
         case Trial = 1
@@ -66,6 +64,10 @@ final class LicenseGate: ObservableObject {
 
     enum Keys {
         static let licenseKey    = "netmax.prefs.licenseKey"       // String, "" = none
+        static let licenseKeySHA = "netmax.prefs.licenseKeySHA256" // String, SHA-256 hex of trimmed key
+        static let licenseToken  = "netmax.prefs.licenseToken"     // String, Ed25519 hex (128 chars)
+        static let licenseIssued = "netmax.prefs.licenseIssuedAt"  // String, UTC ISO from the server
+        static let licenseVerifd = "netmax.prefs.licenseVerifiedAt" // String, UTC ISO of last good check
         static let trialStarted  = "netmax.prefs.trialStartedAt"   // String, fixed-width UTC ISO, "" = not started
         static let trialEnds     = "netmax.prefs.trialEndsAt"      // String, fixed-width UTC ISO
         static let trialDenial   = "netmax.prefs.trialDenialReason" // String, "" = none
@@ -73,6 +75,7 @@ final class LicenseGate: ObservableObject {
 
     let defaults: UserDefaults
     let trialRegistry: TrialRegistryClient
+    let licenseClient: LicenseClient
     let tokenStore: TrialTokenStore
 
     /// Transient: the last startTrial could not reach the server. Not persisted;
@@ -90,13 +93,19 @@ final class LicenseGate: ObservableObject {
          trialStartISO: String = "",
          trialEndISO: String = "",
          trialRegistry: TrialRegistryClient = TrialRegistryClient(),
+         licenseClient: LicenseClient = LicenseClient(),
          tokenStore: TrialTokenStore = KeychainTrialTokenStore()) {
         self.defaults = defaults
         self.trialRegistry = trialRegistry
+        self.licenseClient = licenseClient
         self.tokenStore = tokenStore
         let storedKey    = defaults.string(forKey: Keys.licenseKey) ?? ""
         let storedDenial = defaults.string(forKey: Keys.trialDenial) ?? ""
         _licenseKey = Published(initialValue: storedKey)
+        _licenseKeySHA256 = Published(initialValue: defaults.string(forKey: Keys.licenseKeySHA) ?? "")
+        _licenseToken = Published(initialValue: defaults.string(forKey: Keys.licenseToken) ?? "")
+        _licenseIssuedAt = Published(initialValue: defaults.string(forKey: Keys.licenseIssued) ?? "")
+        _licenseVerifiedAt = Published(initialValue: defaults.string(forKey: Keys.licenseVerifd) ?? "")
         _trialDenialReason = Published(initialValue: storedDenial)
 
         var start: String
@@ -235,6 +244,22 @@ final class LicenseGate: ObservableObject {
         didSet { if oldValue != licenseKey { defaults.set(licenseKey, forKey: Keys.licenseKey) } }
     }
 
+    @Published var licenseKeySHA256: String {
+        didSet { if oldValue != licenseKeySHA256 { defaults.set(licenseKeySHA256, forKey: Keys.licenseKeySHA) } }
+    }
+
+    @Published var licenseToken: String {
+        didSet { if oldValue != licenseToken { defaults.set(licenseToken, forKey: Keys.licenseToken) } }
+    }
+
+    @Published var licenseIssuedAt: String {
+        didSet { if oldValue != licenseIssuedAt { defaults.set(licenseIssuedAt, forKey: Keys.licenseIssued) } }
+    }
+
+    @Published var licenseVerifiedAt: String {
+        didSet { if oldValue != licenseVerifiedAt { defaults.set(licenseVerifiedAt, forKey: Keys.licenseVerifd) } }
+    }
+
     @Published var trialStartedAt: String {
         didSet { if oldValue != trialStartedAt { defaults.set(trialStartedAt, forKey: Keys.trialStarted) } }
     }
@@ -266,10 +291,27 @@ final class LicenseGate: ObservableObject {
     }
 
     func resolvedTier(now: Date = Date()) -> Tier {
-        if !licenseKey.isEmpty && LicenseGate.isWellFormedKey(licenseKey) {
+        if hasVerifiedLicense() {
             return Tier.Pro
         }
         return isServerTrialActive(now: now) ? Tier.Trial : Tier.Free
+    }
+
+    /// Offline license check: a stored bundle is Pro only if its Ed25519 token
+    /// verifies against THIS machine's fingerprint, the stored key hash, and
+    /// the embedded public key. A placeholder public key fails closed.
+    /// The stored hash must also match the stored key (belt-and-braces).
+    func hasVerifiedLicense() -> Bool {
+        guard !licenseKey.isEmpty,
+              !licenseKeySHA256.isEmpty, !licenseToken.isEmpty, !licenseIssuedAt.isEmpty,
+              !LicenseClient.isPlaceholder(licenseClient.publicKeyHex),
+              let fp = MachineFingerprint.fingerprint() else {
+            return false
+        }
+        guard licenseKeySHA256 == LicenseClient.sha256Hex(of: licenseKey) else { return false }
+        return LicenseToken.verify(tokenHex: licenseToken, fingerprint: fp,
+                                   keySHA256: licenseKeySHA256, issuedAt: licenseIssuedAt,
+                                   publicKeyHex: licenseClient.publicKeyHex)
     }
 
     /// A tier of Trial or Pro unlocks paid lanes.
@@ -324,27 +366,95 @@ final class LicenseGate: ObservableObject {
         return nowISO < graceEndISO
     }
 
-    // MARK: Activation
+    // MARK: Activation (server-verified)
 
-    /// Validate and persist a key. Returns false on malformed input and
-    /// leaves stored state untouched.
+    /// Activate a license key against the registry worker. The key format is
+    /// the server's business (Gumroad-issued); locally we only trim it.
+    /// Returns true and persists the verified token bundle on success.
+    /// Returns false and leaves stored state untouched on denial, bad input,
+    /// or unreachable server. Synchronous like the trial activation.
     func activate(_ key: String) -> Bool {
-        let cleaned = key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).uppercased()
-        if !LicenseGate.isWellFormedKey(cleaned) {
+        let cleaned = key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return false }
+        guard let fp = MachineFingerprint.fingerprint() else { return false }
+        switch licenseClient.activate(licenseKey: cleaned, fingerprint: fp) {
+        case .activated(let keySHA256, let issuedAt, let token):
+            licenseKey = cleaned            // @Published persists via didSet
+            licenseKeySHA256 = keySHA256
+            licenseToken = token
+            licenseIssuedAt = issuedAt
+            licenseVerifiedAt = LicenseGate.iso(Date())
+            return true
+        case .denied, .unreachable:
             return false
         }
-        licenseKey = cleaned          // @Published persists via didSet
-        return true
     }
 
     func deactivate() {
         licenseKey = ""
+        clearLicenseVerification()
     }
 
-    /// Structural check only — honest limitation, documented above.
-    static func isWellFormedKey(_ key: String) -> Bool {
-        let upper = key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines).uppercased()
-        return upper.range(of: LicenseGate.KEY_PATTERN, options: String.CompareOptions.regularExpression) != nil
+    /// Drop the verified bundle. The raw key string is kept so the UI still
+    /// shows it; the tier falls back to Trial/Free. Never touches user data.
+    private func clearLicenseVerification() {
+        licenseKeySHA256 = ""
+        licenseToken = ""
+        licenseIssuedAt = ""
+        licenseVerifiedAt = ""
+    }
+
+    /// Best-effort license revalidation. With a verified bundle, a cheap
+    /// status read; without one, a full activate of the stored key (migration
+    /// path for keys stored before server verification existed). At most
+    /// every ~24h while online — this is how refunds/revokes propagate.
+    /// 503/offline keeps the last verified state. Returns true if local
+    /// state changed. Never touches user data.
+    @discardableResult
+    func refreshLicenseStatus() -> Bool {
+        guard let fp = MachineFingerprint.fingerprint(), !licenseKey.isEmpty else { return false }
+        if hasVerifiedLicense() {
+            // Throttle: a good check within the last 24h is fresh enough.
+            if let last = LicenseGate.dateFromISO(licenseVerifiedAt),
+               Date().timeIntervalSince(last) < 24 * 3600 {
+                return false
+            }
+            switch licenseClient.status(fingerprint: fp, keySHA256: licenseKeySHA256, token: licenseToken) {
+            case .current(let active, let issuedAt, _):
+                if active {
+                    licenseVerifiedAt = LicenseGate.iso(Date())
+                    if issuedAt != licenseIssuedAt { licenseIssuedAt = issuedAt }
+                    return true
+                }
+                clearLicenseVerification()  // revoked/refunded: non-destructive drop
+                return true
+            case .unknownOrRevoked:
+                clearLicenseVerification()
+                return true
+            case .unreachable:
+                return false  // keep the last verified state
+            }
+        } else {
+            switch licenseClient.activate(licenseKey: licenseKey, fingerprint: fp) {
+            case .activated(let keySHA256, let issuedAt, let token):
+                licenseKeySHA256 = keySHA256
+                licenseToken = token
+                licenseIssuedAt = issuedAt
+                licenseVerifiedAt = LicenseGate.iso(Date())
+                return true
+            case .denied, .unreachable:
+                return false
+            }
+        }
+    }
+
+    /// Non-blocking revalidation for UI call sites (e.g. Settings onAppear,
+    /// alongside the trial refresh). Network on a utility queue.
+    func refreshLicenseStatusInBackground() {
+        guard !licenseKey.isEmpty, MachineFingerprint.fingerprint() != nil else { return }
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            _ = self?.refreshLicenseStatus()
+        }
     }
 
     // MARK: Persistence plumbing

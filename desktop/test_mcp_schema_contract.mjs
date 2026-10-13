@@ -31,7 +31,13 @@ const ALL_17_TOOLS = [
   "parallel_diagnostics",
   "ai_analyze",
   "list_analyses",
-  "session_info"
+  "session_info",
+  "path_trace",
+  "http_timing",
+  "captive_portal_check",
+  "ipv6_check",
+  "mtu_probe",
+  "network_context"
 ];
 
 async function setupClient(t) {
@@ -85,7 +91,7 @@ process.stdout.write(JSON.stringify({ success: true, mode: "test", data: { raw: 
   return { client, marker };
 }
 
-test("MCP server registers exactly the expected 20 tools", async (t) => {
+test("MCP server registers exactly the expected 26 tools", async (t) => {
   const { client } = await setupClient(t);
   const toolList = await client.listTools();
   const registered = toolList.tools.map((x) => x.name).sort();
@@ -220,6 +226,32 @@ const CASES = {
   evidence_export: {
     valid: [{ records: ["rec-1"] }],
     invalid: [{ records: "rec-1" }, {}, { records: [] }, { records: ["../../evil"] }, { records: ["rec-1", "bogus"] }]
+  },
+  path_trace: {
+    valid: [{ host: "1.1.1.1" }, { host: "example.com", max_hops: 5 }],
+    invalid: [{}, { host: "" }, { host: "-oProxyCommand=x" }, { host: "bad host" }, { host: "a;b" },
+      { host: "1.1.1.1", max_hops: 0 }, { host: "1.1.1.1", max_hops: 31 }, { host: 123 }, "not-an-object"],
+  },
+  http_timing: {
+    valid: [{ url: "https://example.com/" }, { url: "http://example.com/a?b=1", count: 3 }],
+    invalid: [{}, { url: "file:///etc/passwd" }, { url: "ftp://example.com/" }, { url: "https://exa mple.com/" },
+      { url: "https://example.com/", count: 0 }, { url: "https://example.com/", count: 6 }, { url: 5 }, "not-an-object"],
+  },
+  captive_portal_check: {
+    valid: [{}],
+    invalid: ["not-an-object", 12345, []],
+  },
+  ipv6_check: {
+    valid: [{}],
+    invalid: ["not-an-object", 12345, []],
+  },
+  mtu_probe: {
+    valid: [{}, { host: "example.com" }],
+    invalid: [{ host: "-c" }, { host: "bad host" }, { host: "x".repeat(300) }, { host: 5 }, "not-an-object"],
+  },
+  network_context: {
+    valid: [{}],
+    invalid: ["not-an-object", 12345, []],
   },
 };
 

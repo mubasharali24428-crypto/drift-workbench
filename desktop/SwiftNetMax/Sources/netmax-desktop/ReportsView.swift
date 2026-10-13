@@ -579,7 +579,7 @@ enum ReportsMonthlyTests {
         // PDF mapping: four stat rows carrying the real numbers; the big
         // letter honestly renders "—" when no grade exists.
         let content = MonthlySummary.pdfContent(for: stats)
-        check(content.title == "NetMax Monthly Summary", "pdf title set")
+        check(content.title == "Drift Workbench Monthly Summary", "pdf title set")
         check(content.sections.count == 1 && content.sections[0].rows.count == 4,
               "four stat rows reach the renderer")
         check(content.sections[0].rows[1].value == "100.0 Mbps",

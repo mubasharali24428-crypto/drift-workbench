@@ -36,7 +36,7 @@ import { writeFile, unlink, readFile, mkdir, rename, chmod } from "node:fs/promi
 import { tmpdir, homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { mkdtemp } from "node:fs/promises";
 
 // ── Config ──────────────────────────────────────────────────────────────────
@@ -45,6 +45,20 @@ import { mkdtemp } from "node:fs/promises";
 // Auto-detection: walk up from this script's location looking for netmax.py.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Single source of truth for the server version: desktop/package.json.
+// Every banner, status line, and MCP serverInfo version below uses SERVER_VERSION,
+// so a version bump only ever touches package.json. Falls back to "unknown"
+// (never crashes) if package.json is missing or unparseable.
+const SERVER_VERSION = (() => {
+  try {
+    const pkg = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf8"));
+    if (pkg && typeof pkg.version === "string" && pkg.version.length > 0) return pkg.version;
+  } catch {
+    // keep "unknown"
+  }
+  return "unknown";
+})();
 
 function resolveEngineRoot() {
   const envRoot = process.env.NETMAX_ROOT;
@@ -373,7 +387,7 @@ function extractValue(text, pattern) {
 export function buildServer() {
   const server = new McpServer({
     name: "netmax-mcp-server",
-    version: "1.0.7",
+    version: SERVER_VERSION,
     description: "Drift Workbench Desktop network diagnostics — throughput, bufferbloat, DNS, WiFi, and more",
   });
 
@@ -612,6 +626,65 @@ export function buildServer() {
     // C1 envelope apply uniformly. download_file stays direct: fetch takes
     // positional url/out args the bridge's flag-only contract can't express.
     async (params, extra) => runTool("eco_bloat", () => runViaBridge("bloat-eco", [], extra?.signal), extra?.signal)
+  );
+
+  // ── Tools: path and reachability probes ──────────────────────────────────
+  // Engine modes the bridge does not wrap, so they go direct like download_file.
+  // Host and URL shapes are checked here and again in the engine; a value that
+  // could be read as a flag never reaches argv.
+
+  const HOST_PATTERN = /^(?!-)[A-Za-z0-9.:-]{1,253}$/;
+
+  server.tool(
+    "path_trace",
+    "Hop-by-hop network path to a host (traceroute): shows where latency starts and where replies stop. macOS and Linux; needs the system traceroute.",
+    {
+      host: z.string().regex(HOST_PATTERN).describe("Hostname or IP address"),
+      max_hops: z.number().int().min(1).max(30).default(20).describe("Maximum hops to probe"),
+    },
+    async ({ host, max_hops }, extra) =>
+      runTool("path_trace", () => runEngineDirect(["trace", host, "--max-hops", String(max_hops)], extra?.signal), extra?.signal)
+  );
+
+  server.tool(
+    "http_timing",
+    "Timing breakdown for one URL: DNS, TCP connect, TLS handshake, server wait and transfer, as the median of 1 to 5 fresh connections. Redirects are reported, not followed. http and https only.",
+    {
+      url: z.string().max(2048).regex(/^https?:\/\/\S+$/i).describe("http:// or https:// URL to time"),
+      count: z.number().int().min(1).max(5).default(1).describe("Number of fresh connections to time"),
+    },
+    async ({ url, count }, extra) =>
+      runTool("http_timing", () => runEngineDirect(["http-timing", url, "--count", String(count)], extra?.signal), extra?.signal)
+  );
+
+  server.tool(
+    "captive_portal_check",
+    "Detect a captive portal or intercepting proxy by fetching two well-known connectivity-check pages over plain HTTP. A redirect or a wrong page means a portal; one unreachable endpoint alone does not.",
+    {},
+    async (params, extra) => runTool("captive_portal_check", () => runEngineDirect(["captive"], extra?.signal), extra?.signal)
+  );
+
+  server.tool(
+    "ipv6_check",
+    "IPv6 readiness against IPv4: global address, working TCP path, AAAA resolution and connect time for each. Verdicts: dual_stack, ipv4_only, ipv6_only, ipv6_broken (an address but no working path), offline.",
+    {},
+    async (params, extra) => runTool("ipv6_check", () => runEngineDirect(["ipv6"], extra?.signal), extra?.signal)
+  );
+
+  server.tool(
+    "mtu_probe",
+    "Path MTU to a host: the largest packet, up to 1500 bytes, that crosses unfragmented, found with don't-fragment pings. A value below 1500 points at a VPN, tunnel or PPPoE link. macOS and Linux; the host must answer ICMP.",
+    {
+      host: z.string().regex(HOST_PATTERN).default("1.1.1.1").describe("Hostname or IP address to probe"),
+    },
+    async ({ host }, extra) => runTool("mtu_probe", () => runEngineDirect(["mtu", "--host", host], extra?.signal), extra?.signal)
+  );
+
+  server.tool(
+    "network_context",
+    "Local network state without sending any traffic: whether the machine is online and whether an active VPN or tunnel interface carries routes. Check it before blaming the network for a slow result.",
+    {},
+    async (params, extra) => runTool("network_context", () => runEngineDirect(["context"], extra?.signal), extra?.signal)
   );
 
   // ── Tool: diagnostic_summary ───────────────────────────────────────────────
@@ -864,8 +937,8 @@ export function buildServer() {
   server.tool(
     "ai_analyze",
     "Run an AI-assisted diagnosis over measurements you already have. " +
-      "Pass `analysis` (see list_analyses) and `input` (JSON object of the " +
-      "measurements), or `history_path` to replay a saved JSON history file " +
+      "Pass `analysis` (see list_analyses) and `input` (a JSON object keyed by the " +
+      "parameter names list_analyses shows for that analysis), or `history_path` to replay a saved JSON history file " +
       "(`netmax-history-*.json` in the Drift Workbench history directory — the engine " +
       "rejects any other path). " +
       "Analysis only: it never runs a measurement or changes your system.",
@@ -890,7 +963,7 @@ export function buildServer() {
 
   server.tool(
     "list_analyses",
-    "List the AI analyses ai_analyze can run, with the module and method each one dispatches to.",
+    "List the AI analyses ai_analyze can run, with the module and method each one dispatches to and the inputs it takes: required parameters bare with their type, optional ones in [brackets].",
     {},
     async (params, extra) => runTool("list_analyses", () => runEngineDirect(["ai", "--list-analyses"], extra?.signal), extra?.signal)
   );
@@ -1320,7 +1393,7 @@ async function main() {
     // Build first: the tool registry populates TOOL_COUNT/TOOL_NAMES as
     // server.tool() runs, so the banner must print after registration.
     const server = buildServer();
-    console.error(`Drift Workbench MCP server v1.0.7 (stdio)`);
+    console.error(`Drift Workbench MCP server v${SERVER_VERSION} (stdio)`);
     console.error(`  Engine root: ${ENGINE_ROOT}`);
     console.error(`  Python:      ${PYTHON}`);
     console.error(`  Bridge:      ${HAS_BRIDGE ? BRIDGE : "none (direct mode)"}`);
@@ -1424,7 +1497,7 @@ async function main() {
       const upSecs = Math.floor((Date.now() - SERVER_START.getTime()) / 1000);
       res.writeHead(200, { "content-type": "text/plain" });
       res.end([
-        `Drift Workbench MCP server v1.0.7 (web) — ${scheme}, ${token ? "bearer auth" : "no auth (loopback only)"}`,
+        `Drift Workbench MCP server v${SERVER_VERSION} (web) — ${scheme}, ${token ? "bearer auth" : "no auth (loopback only)"}`,
         `mcp: ${scheme}://${host}:${port}/mcp`,
         `uptime: ${upSecs}s  tools: ${TOOL_COUNT}  toolCalls: ${toolCallCount}`,
         `engine: ${ENGINE_ROOT}  python: ${PYTHON}  bridge: ${HAS_BRIDGE ? "yes" : "no"}`,
@@ -1452,7 +1525,7 @@ async function main() {
   buildServer();
 
   httpServer.listen(port, host, () => {
-    console.error(`Drift Workbench MCP server v1.0.7 (web) — Streamable HTTP (${scheme})`);
+    console.error(`Drift Workbench MCP server v${SERVER_VERSION} (web) — Streamable HTTP (${scheme})`);
     console.error(`  Endpoint:     ${scheme}://${host === "127.0.0.1" ? "localhost" : host}:${port}/mcp`);
     console.error(`  Dashboard:    ${scheme}://${host === "127.0.0.1" ? "localhost" : host}:${port}/`);
     console.error(`  Engine root:  ${ENGINE_ROOT}`);

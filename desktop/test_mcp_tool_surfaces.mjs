@@ -13,7 +13,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 const desktop = dirname(fileURLToPath(import.meta.url));
 const serverPath = join(desktop, "netmax-mcp-server.mjs");
 
-// The pinned contract: exactly these 20 tools, in server.tool() registration order.
+// The pinned contract: exactly these 26 tools, in server.tool() registration order.
 const EXPECTED_TOOLS = [
   "measure_speed",
   "dns_ranking",
@@ -26,6 +26,12 @@ const EXPECTED_TOOLS = [
   "wifi_info",
   "download_file",
   "eco_bloat",
+  "path_trace",
+  "http_timing",
+  "captive_portal_check",
+  "ipv6_check",
+  "mtu_probe",
+  "network_context",
   "diagnostic_summary",
   "strict_limit",
   "parallel_diagnostics",
@@ -90,7 +96,7 @@ test("tool surfaces agree: listTools, capabilities resource, banner, HTTP status
     child.on("error", reject);
     setTimeout(() => done(stderr), 15000);
   });
-  assert.match(banner, /Tools:\s+20 registered/, "stdio banner must show 20 registered");
+  assert.match(banner, /Tools:\s+26 registered/, "stdio banner must show 26 registered");
 
   // 4. HTTP /status endpoint shows the registered count.
   const port = 18923;
@@ -117,14 +123,14 @@ test("tool surfaces agree: listTools, capabilities resource, banner, HTTP status
     };
     poll();
   });
-  assert.match(statusBody, /tools: 20\b/, "HTTP /status must show 'tools: 20'");
+  assert.match(statusBody, /tools: 26\b/, "HTTP /status must show 'tools: 26'");
   httpChild.kill();
 
   // 5. MCP-README.md states the tool count.
   const readme = await readFile(join(desktop, "MCP-README.md"), "utf8");
-  assert.match(readme, /## 20 Tools exposed/, "MCP-README.md must say '## 20 Tools exposed'");
+  assert.match(readme, /## 26 Tools exposed/, "MCP-README.md must say '## 26 Tools exposed'");
 
   // 6. package.json test script states the tool count.
   const pkg = JSON.parse(await readFile(join(desktop, "package.json"), "utf8"));
-  assert.match(pkg.scripts.test, /20 tools ready/, "package.json test script must say '20 tools ready'");
+  assert.match(pkg.scripts.test, /26 tools ready/, "package.json test script must say '26 tools ready'");
 });

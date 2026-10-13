@@ -146,7 +146,7 @@ extension EmptyStateView {
             symbolName: "clock.arrow.circlepath",
             title: "No history yet",
             message: "Measurements appear here after your first run in Mode Lab. "
-                + "NetMax records only what you actually run — nothing is "
+                + "Drift Workbench records only what you actually run — nothing is "
                 + "preloaded or estimated.",
             buttonTitle: buttonTitle,
             action: action,
@@ -168,7 +168,7 @@ extension EmptyStateView {
             symbolName: "doc.text.magnifyingglass",
             title: "Nothing to export yet",
             message: "Exports need at least one saved result. Run a measurement "
-                + "and it will be ready here as CSV or JSON — NetMax doesn't "
+                + "and it will be ready here as CSV or JSON — Drift Workbench doesn't "
                 + "export placeholder numbers.",
             buttonTitle: buttonTitle,
             action: action,

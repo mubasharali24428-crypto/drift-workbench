@@ -142,7 +142,7 @@ enum StatusBarController {
         let metric = Self.metricSummary(in: record.resultRaw)
             .map { ", \($0)" } ?? ""
         let age = spelledOutAge(from: record.ts, to: now)
-        return "NetMax: last measurement\(metric), "
+        return "Drift Workbench: last measurement\(metric), "
             + "\(record.mode) mode, \(age)"
     }
 
@@ -278,8 +278,8 @@ extension StatusBarController {
                 // W11 fix #2: bare bolt told the user nothing. Now the icon
                 // carries the app name so the menu-bar item is identifiable
                 // at a glance, before any run has ever happened.
-                Label("NetMax", systemImage: "bolt.horizontal.circle")
-                    .accessibilityLabel("NetMax — no measurements yet")
+                Label("Drift Workbench", systemImage: "bolt.horizontal.circle")
+                    .accessibilityLabel("Drift Workbench — no measurements yet")
             } else {
                 Text(label)
                     .accessibilityLabel(
@@ -351,7 +351,7 @@ enum StatusBarControllerSelfCheck {
                 ts: now.addingTimeInterval(-150), mode: "turbo",
                 params: [:], resultRaw: #"{"mbps": 29.34}"#)
             let spoken = StatusBarController.accessibilityDescription(for: record, now: now)
-            let expected = "NetMax: last measurement, 29.3 Mbps, turbo mode, 2 minutes ago"
+            let expected = "Drift Workbench: last measurement, 29.3 Mbps, turbo mode, 2 minutes ago"
             failures += (spoken == expected) ? 0 : 1
         }
 

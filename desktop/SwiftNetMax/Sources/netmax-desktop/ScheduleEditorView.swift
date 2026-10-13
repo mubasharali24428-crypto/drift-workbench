@@ -75,7 +75,7 @@ struct ScheduleEditorView: View {
         } header: {
             Text("Automatic Testing")
         } footer: {
-            Text("NetMax runs one measurement pass in the background on this cadence.")
+            Text("Drift Workbench runs one measurement pass in the background on this cadence.")
         }
     }
 
@@ -163,7 +163,7 @@ struct ScheduleEditorView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .help("plist: a small settings file on disk. NetMax installs one so "
+            .help("plist: a small settings file on disk. Drift Workbench installs one so "
                 + "launchd can relaunch the background checker even after a reboot.")
 
             HStack {

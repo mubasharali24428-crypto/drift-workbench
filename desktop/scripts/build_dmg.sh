@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build_dmg.sh — package desktop/build/NetMaxDesktop.app into a distributable DMG
+# build_dmg.sh — package desktop/build/Drift Workbench.app into a distributable DMG
 #                (W4 TEAM-3 N1 / T3-b).
 #
 # Works fully WITHOUT a paid Apple Developer account:
@@ -23,7 +23,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BUILD_DIR="$REPO_ROOT/desktop/build"
-APP="$BUILD_DIR/NetMaxDesktop.app"
+APP="$BUILD_DIR/Drift Workbench.app"
 STAGING="$BUILD_DIR/dmg-staging"
 
 log() { printf '[build_dmg] %s\n' "$*"; }
@@ -50,7 +50,7 @@ fi
 log "staging $APP (+ /Applications symlink) -> $STAGING"
 rm -rf "$STAGING"
 mkdir -p "$STAGING"
-ditto "$APP" "$STAGING/NetMaxDesktop.app"
+ditto "$APP" "$STAGING/Drift Workbench.app"
 ln -s /Applications "$STAGING/Applications"
 
 # --- 2. Optional Finder cosmetics (guarded AppleScript) -----------------------
@@ -68,7 +68,7 @@ tell application "Finder"
 		set toolbar visible of container window to false
 		set statusbar visible of container window to false
 		set the bounds of container window to {200, 120, 720, 440}
-		set position of item "NetMaxDesktop.app" of container window to {140, 170}
+		set position of item "Drift Workbench.app" of container window to {140, 170}
 		set position of item "Applications" of container window to {420, 170}
 		close
 	end tell

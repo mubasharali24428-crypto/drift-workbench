@@ -110,7 +110,7 @@ struct MainTabView: View {
                     .tabItem { Label("Settings ⌘5", systemImage: "gearshape") }
                     .tag(4)
             }
-            .accessibilityLabel("NetMax sections")
+            .accessibilityLabel("Drift Workbench sections")
             .netMaxTabShortcuts(selection: $selection)
             .netMaxRerunLastShortcut()
         }
@@ -123,7 +123,7 @@ struct MainTabView: View {
             HStack(spacing: 6) {
                 Image(systemName: "gauge.fill")
                     .foregroundColor(.accentColor)
-                Text("NetMax")
+                Text("Drift Workbench")
                     .font(.headline)
                     .fontWeight(.bold)
             }
@@ -153,7 +153,7 @@ struct MainTabView: View {
                 .opacity(0.8)
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(Text("NetMax Navigation"))
+        .accessibilityLabel(Text("Drift Workbench Navigation"))
         .accessibilityHint(Text("Current tab: \(currentTabTitle). Use ⌘1 through ⌘6 to switch tabs."))
     }
     
@@ -189,7 +189,7 @@ struct MainTabView: View {
         .animation(reduceMotion ? .easeInOut(duration: 0.15)
                                 : .spring(response: 0.4, dampingFraction: 0.85),
                    value: selection)
-        .accessibilityLabel("NetMax sections")
+        .accessibilityLabel("Drift Workbench sections")
         .netMaxTabShortcuts(selection: $selection)
         .netMaxRerunLastShortcut()
     }

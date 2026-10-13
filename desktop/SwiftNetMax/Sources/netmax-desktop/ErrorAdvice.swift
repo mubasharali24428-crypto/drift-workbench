@@ -138,9 +138,9 @@ enum ErrorAdvisor {
             keywords: ["no such file or directory", "[errno 2]",
                        "could not launch engine"],
             headline: "Python not found",
-            advice: "NetMax could not start its measurement engine because no "
+            advice: "Drift Workbench could not start its measurement engine because no "
                 + "Python 3 interpreter was found. Install Python 3 (for "
-                + "example from python.org or Homebrew), or point NetMax at an "
+                + "example from python.org or Homebrew), or point Drift Workbench at an "
                 + "existing interpreter in Settings.",
             severity: .critical
         ),
@@ -190,7 +190,7 @@ enum ErrorAdvisor {
     private static func fallback() -> EngineErrorAdvice {
         EngineErrorAdvice(
             headline: "Unexpected error",
-            advice: "NetMax doesn't recognize this failure yet. The technical "
+            advice: "Drift Workbench doesn't recognize this failure yet. The technical "
                 + "details are kept below — if it keeps happening, please send "
                 + "us this report so we can fix it.",
             severity: .warning,

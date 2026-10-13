@@ -24,7 +24,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 BUILD_DIR="$REPO_ROOT/desktop/build"
-APP="$BUILD_DIR/NetMaxDesktop.app"
+APP="$BUILD_DIR/Drift Workbench.app"
 ENTITLEMENTS="$SCRIPT_DIR/entitlements.plist"
 
 # Keychain profile holding App Store Connect API credentials, created once via:

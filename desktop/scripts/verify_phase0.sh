@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SWIFT_DIR="$REPO_ROOT/desktop/SwiftNetMax"
 BRIDGE_DIR="$REPO_ROOT/desktop/bridge"
-APP="$REPO_ROOT/desktop/build/NetMaxDesktop.app"
+APP="$REPO_ROOT/desktop/build/Drift Workbench.app"
 PY="${NETMAX_PYTHON:-}"
 if [[ -z "$PY" ]]; then
   if [[ -x "$REPO_ROOT/.venv/bin/python3" ]]; then

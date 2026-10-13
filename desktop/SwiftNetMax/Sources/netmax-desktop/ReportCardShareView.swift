@@ -44,7 +44,7 @@ enum ReportCardShareComposer {
             + "times measured — not an ISP's maximum capability."
 
     /// Window title used in PDF metadata, headers, and summary first line.
-    static let cardTitle = "NetMax Connection Report Card"
+    static let cardTitle = "Drift Workbench Connection Report Card"
 
     // MARK: PDF input mapping
 

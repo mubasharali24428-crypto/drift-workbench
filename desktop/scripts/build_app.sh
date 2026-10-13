@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# build_app.sh — assemble NetMaxDesktop.app (P0-B4)
+# build_app.sh — assemble "Drift Workbench.app" (P0-B4)
 #
 # Steps:
 #   1. swift build -c release (desktop/SwiftNetMax)
-#   2. Assemble desktop/build/NetMaxDesktop.app/Contents/{MacOS,Resources}
+#   2. Assemble desktop/build/Drift Workbench.app/Contents/{MacOS,Resources}
 #      - release binary netmax-desktop -> MacOS/NetMaxDesktop
 #      - desktop/bridge/engine_bridge.py + repo-root netmax*.py netmetrics.py
 #        -> Resources/engine/
@@ -19,7 +19,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SWIFT_DIR="$REPO_ROOT/desktop/SwiftNetMax"
 BRIDGE_DIR="$REPO_ROOT/desktop/bridge"
 BUILD_DIR="$REPO_ROOT/desktop/build"
-APP="$BUILD_DIR/NetMaxDesktop.app"
+APP="$BUILD_DIR/Drift Workbench.app"
 
 log() { printf '[build_app] %s\n' "$*"; }
 die() { printf '[build_app] ERROR: %s\n' "$*" >&2; exit 1; }
@@ -101,9 +101,9 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<key>CFBundleIdentifier</key>
 	<string>com.netmax.desktop</string>
 	<key>CFBundleName</key>
-	<string>NetMaxDesktop</string>
+	<string>Drift Workbench</string>
 	<key>CFBundleDisplayName</key>
-	<string>NetMax Desktop</string>
+	<string>Drift Workbench</string>
 	<key>CFBundleExecutable</key>
 	<string>NetMaxDesktop</string>
 	<key>CFBundlePackageType</key>

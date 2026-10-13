@@ -494,7 +494,7 @@ struct ModeLabView: View {
         .help("Description of \(selectedMode.id): \(selectedMode.summary)")
         .accessibilityLabel("Engine mode")
         .accessibilityValue(selectedModeID)
-        .accessibilityHint("Choose one of the ten NetMax engine modes")
+        .accessibilityHint("Choose one of the ten Drift Workbench engine modes")
     }
 
     // MARK: Parameters

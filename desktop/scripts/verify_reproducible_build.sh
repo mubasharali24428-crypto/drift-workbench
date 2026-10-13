@@ -51,7 +51,7 @@ build_copy() {
 
   SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" bash "$temp_source/desktop/scripts/build_app.sh"
 
-  local app="$temp_source/desktop/build/NetMaxDesktop.app"
+  local app="$temp_source/desktop/build/Drift Workbench.app"
   codesign --remove-signature "$app/Contents/MacOS/NetMaxDesktop" 2>/dev/null || true
   rm -rf "$app/Contents/_CodeSignature"
 

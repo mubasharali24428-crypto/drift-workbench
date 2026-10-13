@@ -198,11 +198,20 @@ struct SpeedLimitCard: View {
         }
     }
 
+    /// The bridge wraps plain-text engine output as `{"raw": "..."}`. Show the text itself;
+    /// the stored history record keeps the original payload.
+    private var displayText: String {
+        guard let data = resultText.data(using: .utf8),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              obj.count == 1, let inner = obj["raw"] as? String else { return resultText }
+        return inner.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     private var resultBox: some View {
         Group {
             if !resultText.isEmpty {
                 ScrollView {
-                    Text(resultText)
+                    Text(displayText)
                         .font(.system(.caption, design: .monospaced))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
@@ -215,7 +224,7 @@ struct SpeedLimitCard: View {
                         .strokeBorder(Color(nsColor: .separatorColor))
                 )
                 .accessibilityLabel("Speed limit result")
-                .accessibilityValue(resultText)
+                .accessibilityValue(displayText)
             }
         }
     }

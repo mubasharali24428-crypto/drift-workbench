@@ -122,7 +122,7 @@ struct OnboardingView: View {
                 .accessibilityHidden(true)
             Text("You're all set")
                 .font(.title2.weight(.semibold))
-            Text("NetMax will measure what your connection truly delivers and report its limits honestly.")
+            Text("Drift Workbench will measure what your connection truly delivers and report its limits honestly.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

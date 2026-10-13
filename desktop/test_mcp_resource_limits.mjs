@@ -7,7 +7,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { BudgetError, createMeasurementBudget, measurementCost } from "./netmax-mcp-server.mjs";
+
+// Importing the server must not start it (it would hold stdin open after the last test). The
+// children spawned below must start, and they copy process.env, so clear the flag right after.
+process.env.NETMAX_NO_START = "1";
+const { BudgetError, createMeasurementBudget, measurementCost } = await import("./netmax-mcp-server.mjs");
+delete process.env.NETMAX_NO_START;
 
 const desktop = dirname(fileURLToPath(import.meta.url));
 const serverPath = join(desktop, "netmax-mcp-server.mjs");

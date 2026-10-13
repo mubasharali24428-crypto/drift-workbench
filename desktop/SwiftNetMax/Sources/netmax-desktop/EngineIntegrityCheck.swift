@@ -51,7 +51,7 @@ func evaluateEngineIntegrity(dirMode: Int, fileModes: [Int]) -> EngineIntegrityV
     let list = offenders.joined(separator: ", ")
     return EngineIntegrityVerdict(
         status: .warn,
-        message: "NetMax found the bundled engine writable by users other than you (\(list)). "
+        message: "Drift Workbench found the bundled engine writable by users other than you (\(list)). "
             + "For safety, automatic runs stay paused until the app is reinstalled from a "
             + "trusted copy. Manual runs still work.")
 }
@@ -88,7 +88,7 @@ enum EngineIntegrityCheck {
         let verdict = check()
         guard verdict.status == .warn, let message = verdict.message else { return }
         let content = UNMutableNotificationContent()
-        content.title = "NetMax engine integrity warning"
+        content.title = "Drift Workbench engine integrity warning"
         content.body = message
         content.sound = .default
         let request = UNNotificationRequest(

@@ -26,7 +26,7 @@ struct MenuBarView: View {
             HStack {
                 Image(systemName: "bolt.horizontal.circle")
                     .foregroundStyle(.blue)
-                Text("NetMax")
+                Text("Drift Workbench")
                     .font(.headline)
                 Spacer()
                 if status == .running {
@@ -182,7 +182,7 @@ struct MenuBarView: View {
         }
         .buttonStyle(.plain)
         .help(pinned
-              ? "Pinned — NetMax tries to keep this popover open while you review"
+              ? "Pinned — Drift Workbench tries to keep this popover open while you review"
               : "Pin this popover so it stays open while you review results")
         .accessibilityLabel(pinned ? "Unpin popover" : "Pin popover")
         .accessibilityAddTraits(pinned ? [.isSelected] : [])

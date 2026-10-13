@@ -70,7 +70,7 @@ struct OnboardingScheduleStep: View {
                     .font(.title2.weight(.semibold))
                     .foregroundColor(.primary)
 
-                Text("NetMax can run a quick test automatically so your history stays current — even when you forget.")
+                Text("Drift Workbench can run a quick test automatically so your history stays current — even when you forget.")
                     .font(.body)
                     .foregroundColor(.primary)
                     .fixedSize(horizontal: false, vertical: true)

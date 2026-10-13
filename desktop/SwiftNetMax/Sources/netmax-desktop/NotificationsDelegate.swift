@@ -105,7 +105,7 @@ final class NotificationsDelegate: NSObject, UNUserNotificationCenterDelegate {
         // app runs menu-bar-only (launchWindow off) there is nothing to
         // raise — the popover reopens on next click, already on the tab.
         if let window = NSApp.windows.first(where: {
-            $0.isVisible && $0.title == "NetMax"
+            $0.isVisible && $0.title == "Drift Workbench"
         }) {
             window.makeKeyAndOrderFront(nil)
         }

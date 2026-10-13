@@ -258,7 +258,7 @@ final class NotificationCoordinator {
     func postDigest(_ text: String, now: Date = Date()) async -> Bool {
         guard await requestAuthorizationIfNeeded() else { return false }
         let content = UNMutableNotificationContent()
-        content.title = "NetMax daily digest"
+        content.title = "Drift Workbench daily digest"
         content.body = text
         content.sound = .default
         let request = UNNotificationRequest(

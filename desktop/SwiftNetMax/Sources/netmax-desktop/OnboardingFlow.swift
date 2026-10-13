@@ -87,7 +87,7 @@ struct DefaultOnboardingFlow: OnboardingFlow {
     static let steps: [OnboardingStep] = [
         OnboardingStep(
             title: "Your ISP cap is the ceiling",
-            bodyText: "NetMax cannot exceed your ISP cap — no software can. The cap is "
+            bodyText: "Drift Workbench cannot exceed your ISP cap — no software can. The cap is "
                 + "enforced on the provider's side; anyone promising to \"10x your "
                 + "speed\" is selling scamware."
         ),
@@ -99,13 +99,13 @@ struct DefaultOnboardingFlow: OnboardingFlow {
         ),
         OnboardingStep(
             title: "Router QoS overrides everything",
-            bodyText: "Router-side QoS caps override everything NetMax does. Only the "
+            bodyText: "Router-side QoS caps override everything Drift Workbench does. Only the "
                 + "router admin or a plan upgrade can change those limits."
         ),
         OnboardingStep(
             title: "Dropouts reported honestly",
             bodyText: "Zero-throughput windows on shared WiFi are real (airtime "
-                + "starvation). NetMax reports them as dropouts rather than inventing "
+                + "starvation). Drift Workbench reports them as dropouts rather than inventing "
                 + "a flattering percentage."
         ),
     ]

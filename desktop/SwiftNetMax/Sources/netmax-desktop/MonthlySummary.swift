@@ -93,7 +93,7 @@ enum MonthlySummary {
             .init(metric: "Unusual readings", value: "\(stats.anomalyCount)", score: nil),
         ]
         return ReportCardPDF.Content(
-            title: "NetMax Monthly Summary",
+            title: "Drift Workbench Monthly Summary",
             dateRangeText: "Last \(days) days · "
                 + dateRangeText(from: Date().addingTimeInterval(-Double(days) * 86_400),
                                 to: Date()),

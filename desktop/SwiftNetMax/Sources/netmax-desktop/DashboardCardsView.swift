@@ -92,91 +92,42 @@ struct ConfirmDialog: View {
 
 // MARK: - ConfirmDialog (used directly in DashboardCardsView)
 
-// MARK: - Phase 5: Testimonials View
-
-/// Social proof — user testimonials.
-struct TestimonialsView: View {
-    let testimonials = [
-        Testimonial(
-            text: "NetMax found a bufferbloat issue my ISP denied existed. The AI diagnostics saved me hours of troubleshooting.",
-            author: "Alex K.",
-            role: "Network Engineer"
-        ),
-        Testimonial(
-            text: "Finally, a tool that talks to my AI agent directly. No more copy-pasting between terminal and browser.",
-            author: "Sarah M.",
-            role: "DevOps Lead"
-        ),
-        Testimonial(
-            text: "15 tools, zero bloat, MIT licensed. What more could you ask for from a network diagnostic?",
-            author: "James R.",
-            role: "Solo Dev"
-        ),
-    ]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("💬 What Developers Say")
-                .font(.title3.weight(.semibold))
-
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                ForEach(testimonials, id: \.author) { testimonial in
-                    TestimonialCard(testimonial: testimonial)
-                }
-            }
-        }
-        .padding(16)
-    }
-}
-
-struct TestimonialCard: View {
-    let testimonial: Testimonial
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\"\(testimonial.text)\"")
-                .font(.footnote)
-                .foregroundColor(DesignTokens.secondaryText)
-                .italic()
-
-            Text(testimonial.author)
-                .font(.caption.weight(.semibold))
-
-            Text(testimonial.role)
-                .font(.caption2)
-                .foregroundColor(DesignTokens.secondaryText)
-        }
-        .padding(DesignTokens.Spacing.lg)
-        .background(DesignTokens.canvas)
-        .cornerRadius(DesignTokens.Radius.md)
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignTokens.Radius.md)
-                .stroke(DesignTokens.border, lineWidth: 0.5)
-        )
-        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-    }
-}
-
-struct Testimonial {
-    let text: String
-    let author: String
-    let role: String
-}
-
 // MARK: - Phase 5: Analytics Dashboard
 
-/// Usage analytics dashboard.
+/// Analytics computed from the saved run history (the same records and
+/// extractors the dashboard cards and Reports use). Nothing is hard-coded:
+/// a metric with no data reads "—", and the tiles recompute whenever a run
+/// is recorded, so they follow the network's measured performance.
 struct AnalyticsDashboard: View {
-    let metrics = [
-        AnalyticsMetric(value: "142", label: "Total Tests Run"),
-        AnalyticsMetric(value: "99.2%", label: "Uptime"),
-        AnalyticsMetric(value: "42.7", label: "Avg Throughput (Mbps)"),
-        AnalyticsMetric(value: "12ms", label: "Avg Latency"),
-    ]
+    @State private var records: [HistoryRecord] = []
+
+    static func metrics(from records: [HistoryRecord], now: Date = Date()) -> [AnalyticsMetric] {
+        let stats = MonthlySummary.compute(from: records, now: now)
+        let cutoff = now.addingTimeInterval(-Double(MonthlySummary.windowDays) * 86_400)
+        let losses = records.filter { $0.ts >= cutoff }
+            .compactMap { MetricExtractor.latestPacketLossPercent(in: $0.resultRaw) }
+        let loss = losses.isEmpty ? nil : losses.reduce(0, +) / Double(losses.count)
+        let week = DashboardMetrics.speedWeekDelta(from: records, now: now)
+        let trend = week.delta.map { d -> String in
+            let arrow = week.direction == .up ? "▲" : week.direction == .down ? "▼" : "•"
+            return "\(arrow) \(Int(abs(d).rounded()))%"
+        }
+        return [
+            AnalyticsMetric(value: "\(stats.testsCount)", label: "Tests run (30 days)"),
+            AnalyticsMetric(value: stats.averageMbps.map { String(format: "%.1f Mbps", $0) } ?? "—",
+                            label: "Avg throughput"),
+            AnalyticsMetric(value: loss.map { String(format: "%.1f%%", $0) } ?? "—",
+                            label: "Avg packet loss"),
+            AnalyticsMetric(value: stats.worstGrade ?? "—", label: "Worst bufferbloat grade"),
+            AnalyticsMetric(value: "\(stats.anomalyCount)", label: "Unusual readings"),
+            AnalyticsMetric(value: trend ?? "—", label: "Throughput vs last week"),
+        ]
+    }
 
     var body: some View {
+        let metrics = Self.metrics(from: records)
         VStack(alignment: .leading, spacing: 12) {
-            Text("📊 Your Analytics")
+            Text("Your Analytics")
                 .font(.title3.weight(.semibold))
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
@@ -195,8 +146,18 @@ struct AnalyticsDashboard: View {
                     .cornerRadius(8)
                 }
             }
+
+            Text(records.isEmpty
+                 ? "Run a test and your analytics appear here."
+                 : "Computed from your saved runs. Updates after each new run.")
+                .font(.caption2)
+                .foregroundColor(DesignTokens.secondaryText)
         }
         .padding(16)
+        .onAppear { records = HistoryStore.shared.loadAll() }
+        .onReceive(NotificationCenter.default.publisher(for: .netmaxHistoryDidChange)) { _ in
+            records = HistoryStore.shared.loadAll()
+        }
     }
 }
 
@@ -205,36 +166,84 @@ struct AnalyticsMetric {
     let label: String
 }
 
+enum AnalyticsDashboardTests {
+    static func runAll() -> Int {
+        var failures = 0
+        func check(_ condition: Bool, _ name: String) {
+            failures += condition ? 0 : 1
+            if !condition { print("[AnalyticsDashboardTests] FAIL: \(name)") }
+        }
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        func rec(_ daysAgo: Double, _ raw: String) -> HistoryRecord {
+            HistoryRecord(ts: now.addingTimeInterval(-daysAgo * 86_400),
+                          mode: "baseline", params: [:], resultRaw: raw)
+        }
+        func value(_ m: [AnalyticsMetric], _ label: String) -> String? {
+            m.first { $0.label == label }?.value
+        }
+
+        // No history: nothing is invented.
+        let empty = AnalyticsDashboard.metrics(from: [], now: now)
+        check(value(empty, "Tests run (30 days)") == "0", "empty history counts zero")
+        check(value(empty, "Avg throughput") == "—", "empty history has no throughput")
+        check(value(empty, "Throughput vs last week") == "—", "empty history has no trend")
+
+        // Real values flow through, and changing the network changes the tiles.
+        let before = AnalyticsDashboard.metrics(from: [rec(2, "{\"mbps\": 100}")], now: now)
+        check(value(before, "Avg throughput") == "100.0 Mbps", "throughput from history")
+        let after = AnalyticsDashboard.metrics(
+            from: [rec(2, "{\"mbps\": 100}"), rec(1, "{\"mbps\": 20}")], now: now)
+        check(value(after, "Avg throughput") == "60.0 Mbps", "average follows new runs")
+        check(value(after, "Tests run (30 days)") == "2", "count follows new runs")
+
+        // 40-day-old runs fall outside the 30-day window.
+        let old = AnalyticsDashboard.metrics(from: [rec(40, "{\"mbps\": 500}")], now: now)
+        check(value(old, "Tests run (30 days)") == "0", "old runs excluded")
+        return failures
+    }
+}
+
 // MARK: - Phase 5: Changelog
 
 /// Version history with clear dates.
 struct ChangelogView: View {
+    // Source: RELEASE-NOTES.md. Keep these short and limited to what shipped.
     let entries = [
         ChangelogEntry(
-            version: "v2.0.0 — UI/UX Overhaul",
-            date: "January 2026",
+            version: "1.0.8",
+            date: "October 2026",
             changes: [
-                "Dark/light mode support",
-                "Dashboard with real-time charts",
-                "Keyboard shortcuts (⌘K, ⌘T)",
-                "Toast notifications",
-                "Onboarding flow",
+                "The app is now named Drift Workbench (formerly NetMax)",
+                "Settings analytics are computed from your saved runs",
+                "Placeholder testimonials removed",
+                "Windows probe parsers, validated against a real Windows 11 capture",
+                "Evidence export works end to end from the MCP tool",
             ]
         ),
         ChangelogEntry(
-            version: "v1.5.0 — AI Diagnostics",
-            date: "December 2025",
+            version: "1.0.7",
+            date: "October 2026",
             changes: [
-                "AI-powered network analysis",
-                "Bufferbloat detection",
-                "ISP shaping alerts",
+                "Speed Limit: hold a fixed download rate (0.5–10,000 Mbps) for a set time, with a stability report",
+                "Quick Test length picker: 5, 10 or 15 minutes",
+                "Fix: long runs no longer stop before the requested duration",
+            ]
+        ),
+        ChangelogEntry(
+            version: "1.0.6",
+            date: "September 2026",
+            changes: [
+                "Check for Updates reads the real GitHub releases",
+                "Sanitized support bundle export",
+                "ISP evidence packet as shareable markdown",
+                "History stored in SQLite, mirrored to JSONL",
             ]
         ),
     ]
 
     var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.Spacing.lg) {
-            Text("📝 What's New")
+            Text("What's New")
                 .font(.title3.weight(.semibold))
                 .foregroundColor(DesignTokens.ink)
 
@@ -626,8 +635,6 @@ struct DashboardCardsView: View {
                         coverageStripSection
                         // P3: AI analysis over the same extracted metrics.
                         aiInsightSection
-                        // Phase 5: Testimonials
-                        TestimonialsView()
                     }
                         .padding(.vertical, 2)
                 }
@@ -1031,7 +1038,7 @@ struct WhatsNewSheet: View {
                 Image(systemName: "sparkles")
                     .foregroundColor(DesignTokens.info)
                     .accessibilityHidden(true)
-                Text("What's New in NetMax")
+                Text("What's New in Drift Workbench")
                     .font(.headline)
                 Spacer()
                 Text(WhatsNew.currentVersion)

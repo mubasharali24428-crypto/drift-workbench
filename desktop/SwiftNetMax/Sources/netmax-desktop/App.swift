@@ -43,7 +43,7 @@ struct NetMaxDesktopApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("NetMax", id: "main") {
+        WindowGroup("Drift Workbench", id: "main") {
             LaunchWindowGate()
                 .frame(
                     minWidth: 420, idealWidth: 460,
@@ -80,7 +80,7 @@ private struct LaunchWindowGate: View {
                 Image(systemName: "bolt.horizontal.circle")
                     .font(.system(size: 40))
                     .foregroundStyle(.secondary)
-                Text("NetMax runs from the ⚡ menu-bar icon.")
+                Text("Drift Workbench runs from the ⚡ menu-bar icon.")
                     .font(.headline)
                 Text("Re-enable “Open main window at startup” in Settings to bring this window back.")
                     .font(.caption)

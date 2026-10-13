@@ -9,7 +9,7 @@ The MCP server calls the **same Python engine scripts** that the Swift GUI uses
 via `engine_bridge.py`. Your app, its data, its running state, its daemons —
 **nothing is modified**.
 
-## 20 Tools exposed
+## 26 Tools exposed
 
 | Tool | What it does |
 |---|---|---|
@@ -30,6 +30,15 @@ via `engine_bridge.py`. Your app, its data, its running state, its daemons —
 | `mcp__netmax__strict_limit` | System-wide speed ceiling via dnctl+pf (macOS, needs server as root; ≤150 s) |
 | `mcp__netmax__ai_analyze` | Analyze supplied measurements; no measurement or system changes |
 | `mcp__netmax__list_analyses` | List supported analysis names |
+| `mcp__netmax__evidence_export` | Redacted evidence bundle (JSON) for chosen history records |
+| `mcp__netmax__fleet_drift_workbench` | Fleet baselines and drift checks against allowlisted HTTPS peers |
+| `mcp__netmax__policy_bound_workflow` | Fixed, envelope-checked measurement sequences (`network_baseline`, `dns_audit`) |
+| `mcp__netmax__path_trace` | Hop-by-hop path to a host (traceroute; macOS and Linux) |
+| `mcp__netmax__http_timing` | DNS, TCP, TLS, server-wait and transfer time for one URL (median of 1-5) |
+| `mcp__netmax__captive_portal_check` | Captive portal or intercepting-proxy detection |
+| `mcp__netmax__ipv6_check` | IPv6 readiness against IPv4: verdict and connect times |
+| `mcp__netmax__mtu_probe` | Path MTU up to 1500 via don't-fragment pings (macOS and Linux) |
+| `mcp__netmax__network_context` | Online and VPN state from local interfaces; sends no traffic |
 
 ## Remote AI privacy
 
@@ -88,7 +97,7 @@ The `download_file` tool accelerates downloads using parallel streams with stric
 ## Run standalone
 
 ```bash
-cd /Users/user/netmax-app/desktop
+cd /path/to/netmax-app/desktop
 node netmax-mcp-server.mjs
 ```
 
@@ -161,7 +170,7 @@ Drift Workbench tools.
 ## Debug
 
 ```bash
-npx @modelcontextprotocol/inspector node /Users/user/netmax-app/desktop/netmax-mcp-server.mjs
+npx @modelcontextprotocol/inspector node /path/to/netmax-app/desktop/netmax-mcp-server.mjs
 ```
 
 ## Architecture

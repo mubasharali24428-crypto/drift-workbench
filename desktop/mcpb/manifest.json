@@ -1,10 +1,10 @@
 {
   "manifest_version": "0.2",
   "name": "netmax",
-  "display_name": "NetMax MCP Server",
-  "version": "1.0.7",
-  "description": "15 network-diagnostic tools for AI coding agents — speed test, DNS ranking, bufferbloat, WiFi, jitter, packet loss, multi-stream download, system-wide speed ceiling.",
-  "long_description": "NetMax exposes a local-first network diagnostics engine to any MCP client (Claude Code, Codex, Cursor, Gemini, LM Studio, DSH). Tools cover speed testing, DNS resolver ranking, bufferbloat under load, packet loss, jitter, WiFi details, downloads, and session summaries. The engine is Python 3.10+ with curl; the server is a Node ESM stdio process.",
+  "display_name": "Drift Workbench MCP Server",
+  "version": "1.0.8",
+  "description": "26 network-diagnostic tools for AI coding agents — speed test, DNS ranking, bufferbloat, WiFi, jitter, packet loss, multi-stream download, path trace, HTTP timing, IPv6, MTU, captive-portal check, system-wide speed ceiling.",
+  "long_description": "Drift Workbench exposes a local-first network diagnostics engine to any MCP client (Claude Code, Codex, Cursor, Gemini, LM Studio, DSH). Tools cover speed testing, DNS resolver ranking, bufferbloat under load, packet loss, jitter, WiFi details, downloads, and session summaries. The engine is Python 3.10+ with curl; the server is a Node ESM stdio process.",
   "author": {
     "name": "Mubashar Ali",
     "url": "https://github.com/mubasharali24428-crypto"
@@ -55,6 +55,17 @@
     { "name": "diagnostic_summary", "description": "Summarize the latest diagnostic session" },
     { "name": "parallel_diagnostics", "description": "Run multiple diagnostics in parallel" },
     { "name": "session_info", "description": "Show session info and server status" },
-    { "name": "strict_limit", "description": "Enforce a system-wide download ceiling (macOS, root)" }
+    { "name": "strict_limit", "description": "Enforce a system-wide download ceiling (macOS, root)" },
+    { "name": "ai_analyze", "description": "AI-assisted diagnosis over your measurements" },
+    { "name": "list_analyses", "description": "The AI analyses available to run" },
+    { "name": "evidence_export", "description": "Timestamped evidence bundle (JSON)" },
+    { "name": "fleet_drift_workbench", "description": "Fleet baselines and drift checks" },
+    { "name": "policy_bound_workflow", "description": "Fixed, envelope-checked measurement sequences" },
+    { "name": "path_trace", "description": "Hop-by-hop path to a host (macOS, Linux)" },
+    { "name": "http_timing", "description": "DNS, TCP, TLS, server-wait and transfer time for one URL" },
+    { "name": "captive_portal_check", "description": "Detect a captive portal or intercepting proxy" },
+    { "name": "ipv6_check", "description": "IPv6 readiness against IPv4" },
+    { "name": "mtu_probe", "description": "Path MTU up to 1500 bytes (macOS, Linux)" },
+    { "name": "network_context", "description": "Online and VPN state from local interfaces" }
   ]
 }

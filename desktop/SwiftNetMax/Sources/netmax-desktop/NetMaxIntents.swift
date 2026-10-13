@@ -14,7 +14,7 @@ import SwiftUI
 struct RunQuickTestIntent: AppIntent {
     static var title: LocalizedStringResource = "Run Quick Test"
     static var description = IntentDescription(
-        "Runs the NetMax quick speed test and returns the measured result."
+        "Runs the Drift Workbench quick speed test and returns the measured result."
     )
 
     @MainActor

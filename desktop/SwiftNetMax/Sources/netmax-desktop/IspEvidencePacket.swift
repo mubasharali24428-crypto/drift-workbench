@@ -29,7 +29,7 @@ enum IspEvidencePacket {
         fmt.dateFormat = "yyyy-MM-dd HH:mm:ss z"
 
         var lines: [String] = []
-        lines.append("# NetMax ISP Evidence Packet")
+        lines.append("# Drift Workbench ISP Evidence Packet")
         lines.append("")
         lines.append("Generated: \(fmt.string(from: Date()))")
         lines.append("Runs included: \(records.count)")
@@ -159,7 +159,7 @@ enum IspEvidenceTests {
         ]
 
         let md = IspEvidencePacket.format(records: records, planMbps: 100)
-        check(md.contains("# NetMax ISP Evidence Packet"))
+        check(md.contains("# Drift Workbench ISP Evidence Packet"))
         check(md.contains("Plan speed: 100 Mbps"))
         check(md.contains("## Plan vs actual"))
         check(md.contains("## Degradation timeline"))

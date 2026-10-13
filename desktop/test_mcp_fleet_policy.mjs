@@ -2,7 +2,9 @@ process.env.NETMAX_NO_START = "1";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { EventEmitter } from "node:events";
-import { parseFleetConfig, resolveFleetTarget, fleetRequest } from "./netmax-mcp-server.mjs";
+// Dynamic, not static: static imports are hoisted above line 1, so the flag would be set after
+// the server module had already started itself on stdio and held the process open.
+const { parseFleetConfig, resolveFleetTarget, fleetRequest } = await import("./netmax-mcp-server.mjs");
 
 function config(allowlist, tokens = "{}") {
   return {

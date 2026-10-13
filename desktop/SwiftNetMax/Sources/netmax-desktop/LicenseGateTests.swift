@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 // Offline unit tests for LicenseGate (contract style mirrors HistoryStoreTests).
 //
@@ -31,13 +32,6 @@ enum LicenseGateTests {
                 if !label.isEmpty { print("FAIL LicenseGateTests: \(label)") }
             }
         }
-
-        // Key format: LMS-style 5x4 uppercase alphanumeric.
-        check(LicenseGate.isWellFormedKey("ABCD-EF12-GH34-IJ56-KL78"))
-        check(LicenseGate.isWellFormedKey("abcd-ef12-gh34-ij56-kl78"))
-        check(!LicenseGate.isWellFormedKey("ABCD-EF12-GH34-IJ56-KL7"))
-        check(!LicenseGate.isWellFormedKey("ABCD EF12 GH34 IJ56 KL78"))
-        check(!LicenseGate.isWellFormedKey(""))
 
         // ---- Trial hardening fixtures ----
         let testSecret = "test-secret-xyz"
@@ -150,25 +144,139 @@ enum LicenseGateTests {
                                         end: now.addingTimeInterval(-80 * 3600.0))
         check(gPastGrace.resolvedTier(now: now) == LicenseGate.Tier.Free, "80h past end -> Free")
 
-        // Activation: valid key -> Pro + persisted; bad key -> untouched.
-        let (gPro, _) = tokenGate(start: now.addingTimeInterval(-10 * 86400.0),
-                                  end: now.addingTimeInterval(-9 * 86400.0))
-        check(gPro.activate("ABCD-EF12-GH34-IJ56-KL78"))
-        check(gPro.licenseKey == "ABCD-EF12-GH34-IJ56-KL78")
-        check(gPro.resolvedTier(now: now) == LicenseGate.Tier.Pro)
-        check(gPro.canUse(LicenseGate.Feature.PdfReportCard, now: now))
+        // ---- License: server-verified activation ----
+        // A real Ed25519 keypair is minted in-test; the stub transport serves
+        // tokens signed by it, so the offline CryptoKit path is exercised.
+        let licPriv = Curve25519.Signing.PrivateKey()
+        let licPubHex = licPriv.publicKey.rawRepresentation.map { String(format: "%02x", $0) }.joined()
+        let licKey = "GUMROAD-TEST-KEY-001"
+        let licIssued = LicenseGate.iso(now)
+        func mintLicense(fp: String, key: String, issuedAt: String) -> (ks: String, token: String) {
+            let ks = LicenseClient.sha256Hex(of: key)
+            let sig = try! licPriv.signature(for: LicenseToken.message(fingerprint: fp, keySHA256: ks, issuedAt: issuedAt))
+            return (ks, sig.map { String(format: "%02x", $0) }.joined())
+        }
+        func makeLicenseClient(respond: @escaping (URLRequest) throws -> (Int, [String: Any])) -> LicenseClient {
+            var c = LicenseClient()
+            c.baseURLString = "https://license.test"
+            c.publicKeyHex = licPubHex
+            c.appVersion = "test"
+            c.transport = { req in
+                let (st, json) = try respond(req)
+                let data = try JSONSerialization.data(withJSONObject: json)
+                let resp = HTTPURLResponse(url: req.url!, statusCode: st, httpVersion: nil, headerFields: nil)!
+                return (data, resp)
+            }
+            return c
+        }
+        func licenseGate(respond: @escaping (URLRequest) throws -> (Int, [String: Any]),
+                         defaults: UserDefaults? = nil) -> LicenseGate {
+            LicenseGate(defaults: defaults ?? freshStore(),
+                        licenseClient: makeLicenseClient(respond: respond),
+                        tokenStore: InMemoryTrialTokenStore())
+        }
+        let (vKs, vTok) = mintLicense(fp: fp, key: licKey, issuedAt: licIssued)
+        let validActivate: (URLRequest) throws -> (Int, [String: Any]) =
+            { _ in (200, ["ok": true, "issued_at": licIssued, "key_sha256": vKs, "token": vTok]) }
 
-        let (g2, _) = tokenGate(start: now.addingTimeInterval(-10 * 86400.0),
-                                end: now.addingTimeInterval(-9 * 86400.0))
-        check(!g2.activate("nonsense"))
-        check(g2.resolvedTier(now: now) == LicenseGate.Tier.Free)
+        // Valid token -> Pro + bundle persisted; restored Pro offline afterwards.
+        let gLic = licenseGate(respond: validActivate)
+        check(gLic.activate(licKey), "valid license activates")
+        check(gLic.licenseKey == licKey, "key persisted")
+        check(gLic.licenseKeySHA256 == vKs && !gLic.licenseToken.isEmpty, "bundle persisted")
+        check(gLic.resolvedTier(now: now) == LicenseGate.Tier.Pro, "verified license -> Pro")
+        check(gLic.canUse(LicenseGate.Feature.PdfReportCard, now: now), "Pro unlocks paid features")
+        var offClient = LicenseClient()
+        offClient.baseURLString = "https://license.test"
+        offClient.publicKeyHex = licPubHex
+        offClient.transport = { _ in throw URLError(.notConnectedToInternet) }
+        let gLic2 = LicenseGate(defaults: gLic.defaults, licenseClient: offClient,
+                                tokenStore: InMemoryTrialTokenStore())
+        check(gLic2.resolvedTier(now: now) == LicenseGate.Tier.Pro, "Pro restored offline from bundle")
 
-        // Persistence round-trip: a new gate over the SAME store restores Pro.
-        let g3 = LicenseGate(defaults: gPro.defaults,
-            trialStartISO: LicenseGate.iso(now.addingTimeInterval(-10 * 86400.0)),
-            trialEndISO: LicenseGate.iso(now.addingTimeInterval(-9 * 86400.0)),
-            trialRegistry: gPro.trialRegistry, tokenStore: gPro.tokenStore)
-        check(g3.resolvedTier(now: now) == LicenseGate.Tier.Pro)
+        // Tampered token -> activation fails closed, nothing stored.
+        var badTok = vTok
+        let lastCh = badTok.removeLast()
+        badTok.append(lastCh == "0" ? "1" : "0")
+        let gTampered = licenseGate(respond: { _ in
+            (200, ["ok": true, "issued_at": licIssued, "key_sha256": vKs, "token": badTok]) })
+        check(!gTampered.activate(licKey), "tampered token rejected")
+        check(gTampered.resolvedTier(now: now) == LicenseGate.Tier.Free, "tampered -> Free")
+        check(gTampered.licenseKey.isEmpty, "failed activation stores nothing")
+
+        // Wrong fingerprint -> token does not verify for this machine.
+        let (wKs, wTok) = mintLicense(fp: String(repeating: "0", count: 64), key: licKey, issuedAt: licIssued)
+        let gWrongFp = licenseGate(respond: { _ in
+            (200, ["ok": true, "issued_at": licIssued, "key_sha256": wKs, "token": wTok]) })
+        check(!gWrongFp.activate(licKey), "wrong-fingerprint token rejected")
+        check(gWrongFp.resolvedTier(now: now) == LicenseGate.Tier.Free, "wrong fingerprint -> Free")
+
+        // Seat limit + invalid key -> denied, state untouched.
+        let gSeats = licenseGate(respond: { _ in (403, ["ok": false, "error": "seat_limit_reached"]) })
+        check(!gSeats.activate(licKey), "seat limit denied")
+        check(gSeats.licenseKey.isEmpty, "denied key not stored")
+        check(gSeats.resolvedTier(now: now) == LicenseGate.Tier.Free, "seat limit -> Free")
+        let gInvalid = licenseGate(respond: { _ in (403, ["ok": false, "error": "invalid_license"]) })
+        check(!gInvalid.activate("nope-not-a-key"), "invalid key denied")
+
+        // Blank key -> rejected without network.
+        var netHit = false
+        let gBlank = licenseGate(respond: { _ in netHit = true; throw URLError(.notConnectedToInternet) })
+        check(!gBlank.activate("   "), "blank key rejected")
+        check(!netHit, "blank key hits no network")
+
+        // Placeholder public key (unconfigured build) -> fail closed, no network.
+        let gPlaceholder = LicenseGate(defaults: freshStore(), tokenStore: InMemoryTrialTokenStore())
+        check(!gPlaceholder.activate(licKey), "placeholder key fails closed")
+        check(!gPlaceholder.hasVerifiedLicense(), "placeholder never verifies")
+
+        // Revoked (refund/chargeback): status active=false drops Pro, key kept.
+        let gRev = licenseGate(respond: { req in
+            if req.url?.path.hasSuffix("/v1/license/activate") == true { return try validActivate(req) }
+            return (200, ["ok": true, "active": false, "issued_at": licIssued, "reason": "refunded"])
+        })
+        check(gRev.activate(licKey), "revocation fixture activates")
+        check(gRev.resolvedTier(now: now) == LicenseGate.Tier.Pro, "pre-revocation Pro")
+        gRev.licenseVerifiedAt = LicenseGate.iso(now.addingTimeInterval(-25 * 3600))  // force re-check
+        check(gRev.refreshLicenseStatus(), "revocation changed state")
+        check(gRev.resolvedTier(now: now) == LicenseGate.Tier.Free, "revoked -> Free")
+        check(gRev.licenseKey == licKey, "revoked key kept (non-destructive)")
+        check(gRev.licenseToken.isEmpty, "revoked bundle cleared")
+
+        // Offline / 503: the last verified state is kept.
+        let gLicOff = licenseGate(respond: validActivate)
+        check(gLicOff.activate(licKey))
+        var offThrow = gLicOff.licenseClient
+        offThrow.transport = { _ in throw URLError(.notConnectedToInternet) }
+        let gOff2 = LicenseGate(defaults: gLicOff.defaults, licenseClient: offThrow,
+                                tokenStore: InMemoryTrialTokenStore())
+        gOff2.licenseVerifiedAt = LicenseGate.iso(now.addingTimeInterval(-25 * 3600))
+        check(!gOff2.refreshLicenseStatus(), "offline changes nothing")
+        check(gOff2.resolvedTier(now: now) == LicenseGate.Tier.Pro, "offline keeps last verified Pro")
+        var unavail = gLicOff.licenseClient
+        unavail.transport = { req in
+            let data = try JSONSerialization.data(withJSONObject: ["ok": false, "error": "verification_unavailable"])
+            let resp = HTTPURLResponse(url: req.url!, statusCode: 503, httpVersion: nil, headerFields: nil)!
+            return (data, resp)
+        }
+        let g503 = LicenseGate(defaults: gLicOff.defaults, licenseClient: unavail,
+                               tokenStore: InMemoryTrialTokenStore())
+        g503.licenseVerifiedAt = LicenseGate.iso(now.addingTimeInterval(-25 * 3600))
+        check(!g503.refreshLicenseStatus(), "503 changes nothing")
+        check(g503.resolvedTier(now: now) == LicenseGate.Tier.Pro, "503 keeps last verified Pro")
+
+        // Throttle: a fresh verification is not re-checked (no network hit).
+        // (Fresh gate: earlier tests backdated licenseVerifiedAt on the shared
+        // defaults, so re-activate here for a verifiedAt of right now.)
+        let gThrBase = licenseGate(respond: validActivate)
+        check(gThrBase.activate(licKey), "throttle fixture activates")
+        var thrHit = false
+        var thrClient = gThrBase.licenseClient
+        thrClient.transport = { _ in thrHit = true; throw URLError(.notConnectedToInternet) }
+        let gThr = LicenseGate(defaults: gThrBase.defaults, licenseClient: thrClient,
+                               tokenStore: InMemoryTrialTokenStore())
+        check(!gThr.refreshLicenseStatus(), "fresh verification throttles re-check")
+        check(!thrHit, "throttled re-check hits no network")
 
         // H8: a fresh gate with no stored trial is Free (no auto-stamp);
         // startTrial now requires a server activation.
@@ -226,8 +334,12 @@ enum LicenseGateTests {
         check(gOff.trialStartedAt.isEmpty, "offline stamps nothing")
 
         // Unconfigured server (placeholder host): fail-closed, no network.
+        // (Explicit placeholder: the default client now points at the deployed
+        // worker, so the default would hit the real network here.)
+        var uncfgReg = TrialRegistryClient()
+        uncfgReg.baseURLString = "https://REPLACE-WITH-REGISTRY-HOST"
         let gUncfg = LicenseGate(defaults: freshStore(),
-                                 trialRegistry: TrialRegistryClient(),
+                                 trialRegistry: uncfgReg,
                                  tokenStore: InMemoryTrialTokenStore())
         gUncfg.startTrial(now: now)
         check(gUncfg.trialNeedsConnection, "placeholder host -> needs-connection")

@@ -270,3 +270,222 @@ struct TrialRegistryClient {
         }
     }
 }
+
+// MARK: - License (paid tier — Founding License, $29)
+
+/// Protocol (must match trial-server-worker/src/license.js):
+///   POST /v1/license/activate  {license_key, fingerprint_sha256, app_version}
+///     -> 200 {ok, issued_at, key_sha256, token}
+///     -> 403 {ok:false, error: invalid_license | license_revoked | seat_limit_reached}
+///     -> 400 malformed_* | 429 rate_limited | 503 verification_unavailable | 500 server_*
+///
+///   GET /v1/license/status?fp=<hex>&ks=<key_sha256>&token=<hex>
+///     -> 200 {ok, active, issued_at} (+ reason when active is false)
+///     -> 403 bad_token | 404 unknown_license
+///
+///   token = Ed25519 signature (hex, 128 chars) over
+///     "license-v1|<fingerprint_sha256>|<key_sha256>|<issued_at>" (UTF-8).
+///   key_sha256 = SHA-256 hex of the license key after trimming whitespace.
+///
+/// The app embeds ONLY the public key (64 hex chars, printed by
+/// trial-server-worker/scripts/gen-license-key.mjs) and verifies the token
+/// offline. Nothing secret ships in the app. Enforcement is at activation
+/// (and `requireLicense` for future paid endpoints); nothing meters local
+/// probes. A seat that was valid at its last check keeps working through
+/// 503/offline; refunds propagate on the next activate (~24h while online).
+
+enum LicenseDenialReason: String {
+    case invalidLicense = "invalid_license"
+    case licenseRevoked = "license_revoked"
+    case seatLimitReached = "seat_limit_reached"
+}
+
+enum LicenseActivationOutcome {
+    case activated(keySHA256: String, issuedAt: String, token: String)
+    case denied(LicenseDenialReason)
+    case unreachable(Error)
+}
+
+enum LicenseStatusOutcome {
+    case current(active: Bool, issuedAt: String, reason: String?)
+    case unknownOrRevoked
+    case unreachable(Error)
+}
+
+enum LicenseRegistryError: Error {
+    case notConfigured   // base URL or public key still holds the placeholder
+    case badResponse
+    case tokenMismatch
+    case verificationUnavailable  // 503: Gumroad unreachable; keep last verified state
+    case serverError(Int)
+}
+
+/// Ed25519-signed license token, bound to (fingerprint, key_sha256, issued_at).
+enum LicenseToken {
+
+    static func message(fingerprint: String, keySHA256: String, issuedAt: String) -> Data {
+        Data("license-v1|\(fingerprint)|\(keySHA256)|\(issuedAt)".utf8)
+    }
+
+    /// Verify a 128-hex-char Ed25519 signature against the embedded public key
+    /// (64 hex chars). Pure offline check; false on any malformed input.
+    static func verify(tokenHex: String, fingerprint: String, keySHA256: String,
+                       issuedAt: String, publicKeyHex: String) -> Bool {
+        guard let sig = Data(hex: tokenHex), sig.count == 64,
+              let pub = Data(hex: publicKeyHex), pub.count == 32,
+              let key = try? Curve25519.Signing.PublicKey(rawRepresentation: pub) else {
+            return false
+        }
+        return key.isValidSignature(sig, for: message(fingerprint: fingerprint,
+                                                      keySHA256: keySHA256,
+                                                      issuedAt: issuedAt))
+    }
+}
+
+private extension Data {
+    init?(hex: String) {
+        guard hex.count % 2 == 0, !hex.isEmpty else { return nil }
+        var data = Data(capacity: hex.count / 2)
+        var i = hex.startIndex
+        while i < hex.endIndex {
+            let j = hex.index(i, offsetBy: 2)
+            guard let byte = UInt8(hex[i..<j], radix: 16) else { return nil }
+            data.append(byte)
+            i = j
+        }
+        self = data
+    }
+}
+
+struct LicenseClient {
+
+    /// MAX: the license routes live on the same worker as the trial registry.
+    /// While the placeholder is present, calls short-circuit to .unreachable
+    /// (fail-closed — no network to a bogus host, no unverified Pro).
+    static var defaultBaseURLString = "https://drift-trial-registry.mubasharali24428.workers.dev"
+
+    /// Ed25519 PUBLIC key (64 hex chars) for offline license-token verification.
+    /// Printed by `trial-server-worker/scripts/gen-license-key.mjs`. The private
+    /// key never ships. Replace at build time before shipping; while the
+    /// placeholder is present, activation fails closed.
+    static let embeddedLicensePublicKey = "REPLACE-WITH-DEPLOYED-LICENSE-PUBLIC-KEY"
+
+    var baseURLString: String = LicenseClient.defaultBaseURLString
+    var publicKeyHex: String = LicenseClient.embeddedLicensePublicKey
+    var appVersion: String = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "unknown"
+
+    /// Injectable transport. Production: synchronous URLSession (shared with
+    /// the trial client). Tests: stub.
+    var transport: (URLRequest) throws -> (Data, HTTPURLResponse) = TrialRegistryClient.liveTransport
+
+    static func isPlaceholder(_ s: String) -> Bool { s.contains("REPLACE-WITH") }
+
+    static func sha256Hex(of s: String) -> String {
+        SHA256.hash(data: Data(s.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    // MARK: Activate
+
+    func activate(licenseKey: String, fingerprint: String) -> LicenseActivationOutcome {
+        guard !Self.isPlaceholder(baseURLString),
+              let url = URL(string: baseURLString + "/v1/license/activate") else {
+            return .unreachable(LicenseRegistryError.notConfigured)
+        }
+        // Fail closed while the verify key is a placeholder: a token we
+        // cannot check must never yield Pro.
+        guard !Self.isPlaceholder(publicKeyHex) else {
+            return .unreachable(LicenseRegistryError.notConfigured)
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = 15
+        let trimmed = licenseKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body: [String: Any] = [
+            "license_key": trimmed,
+            "fingerprint_sha256": fingerprint,
+            "app_version": appVersion,
+        ]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        let data: Data
+        let resp: HTTPURLResponse
+        do {
+            (data, resp) = try transport(req)
+        } catch {
+            return .unreachable(error)
+        }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return .unreachable(LicenseRegistryError.badResponse)
+        }
+        switch resp.statusCode {
+        case 200:
+            guard json["ok"] as? Bool == true,
+                  let issuedAt = json["issued_at"] as? String, !issuedAt.isEmpty,
+                  let keySHA256 = json["key_sha256"] as? String, !keySHA256.isEmpty,
+                  let token = json["token"] as? String, !token.isEmpty else {
+                return .unreachable(LicenseRegistryError.badResponse)
+            }
+            // Belt-and-braces: the server must echo the hash of the key we sent.
+            guard keySHA256 == Self.sha256Hex(of: trimmed) else {
+                return .unreachable(LicenseRegistryError.badResponse)
+            }
+            guard LicenseToken.verify(tokenHex: token, fingerprint: fingerprint,
+                                      keySHA256: keySHA256, issuedAt: issuedAt,
+                                      publicKeyHex: publicKeyHex) else {
+                return .unreachable(LicenseRegistryError.tokenMismatch)
+            }
+            return .activated(keySHA256: keySHA256, issuedAt: issuedAt, token: token)
+        case 403:
+            let err = json["error"] as? String ?? ""
+            if let reason = LicenseDenialReason(rawValue: err) {
+                return .denied(reason)
+            }
+            return .unreachable(LicenseRegistryError.badResponse)
+        case 503:
+            return .unreachable(LicenseRegistryError.verificationUnavailable)
+        default:
+            return .unreachable(LicenseRegistryError.serverError(resp.statusCode))
+        }
+    }
+
+    // MARK: Status (revalidation — D1 read only, cheap)
+
+    func status(fingerprint: String, keySHA256: String, token: String) -> LicenseStatusOutcome {
+        guard !Self.isPlaceholder(baseURLString) else {
+            return .unreachable(LicenseRegistryError.notConfigured)
+        }
+        var comps = URLComponents(string: baseURLString + "/v1/license/status")
+        comps?.queryItems = [
+            URLQueryItem(name: "fp", value: fingerprint),
+            URLQueryItem(name: "ks", value: keySHA256),
+            URLQueryItem(name: "token", value: token),
+        ]
+        guard let url = comps?.url else {
+            return .unreachable(LicenseRegistryError.badResponse)
+        }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 15
+
+        let data: Data
+        let resp: HTTPURLResponse
+        do {
+            (data, resp) = try transport(req)
+        } catch {
+            return .unreachable(error)
+        }
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return .unreachable(LicenseRegistryError.badResponse)
+        }
+        switch resp.statusCode {
+        case 200 where json["ok"] as? Bool == true:
+            return .current(active: json["active"] as? Bool ?? false,
+                            issuedAt: json["issued_at"] as? String ?? "",
+                            reason: json["reason"] as? String)
+        case 403, 404:
+            return .unknownOrRevoked
+        default:
+            return .unreachable(LicenseRegistryError.serverError(resp.statusCode))
+        }
+    }
+}

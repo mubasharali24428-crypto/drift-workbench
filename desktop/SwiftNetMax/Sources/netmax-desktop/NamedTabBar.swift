@@ -48,7 +48,7 @@ struct NamedTabBar: View {
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.control))
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("NetMax sections")
+        .accessibilityLabel("Drift Workbench sections")
     }
 
     private func tabButton(_ tab: TabDef) -> some View {

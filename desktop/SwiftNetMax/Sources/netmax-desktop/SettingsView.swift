@@ -102,7 +102,6 @@ struct SettingsView: View {
                 licenseSection
                 about
                 // Phase 5: New sections
-                testimonialsSection
                 analyticsSection
                 changelogSection
                 backupSection
@@ -359,7 +358,7 @@ struct SettingsView: View {
                 Text("Notifications")
             } footer: {
                 Text(notifyPrefs.notificationsEnabled
-                     ? "NetMax will alert you when any enabled rule matches."
+                     ? "Drift Workbench will alert you when any enabled rule matches."
                      : "Notifications are off — individual rules are kept but ignored.")
             }
 
@@ -593,7 +592,7 @@ struct SettingsView: View {
         } header: {
             Text("Onboarding")
         } footer: {
-            Text("Replays the four-step intro next time you open NetMax. Your settings and history are kept.")
+            Text("Replays the four-step intro next time you open Drift Workbench. Your settings and history are kept.")
         }
         .id(SettingsSection.onboarding.id) // T4-a anchor
     }
@@ -657,15 +656,15 @@ struct SettingsView: View {
                         .accessibilityLabel(Text("Trial expired. Enter a license key for Pro."))
                 }
                 HStack {
-                    TextField("ABCD-EF12-GH34-IJ56-KL78", text: $license.licenseKey)
+                    TextField("Paste key from Gumroad", text: $license.licenseKey)
                         .textFieldStyle(.roundedBorder)
                         .disableAutocorrection(true)
                         .onSubmit { _ = license.activate(license.licenseKey) }
                         .accessibilityLabel(Text("License key"))
-                        .accessibilityHint(Text("Five groups of four uppercase letters or digits, e.g. ABCD-EF12-GH34-IJ56-KL78."))
+                        .accessibilityHint(Text("Paste the license key from your Gumroad purchase."))
                         .accessibilityIdentifier("license.keyField")
                     Button("Activate") { _ = license.activate(license.licenseKey) }
-                        .disabled(!LicenseGate.isWellFormedKey(license.licenseKey))
+                        .disabled(license.licenseKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .accessibilityLabel(Text("Activate license key"))
                         .accessibilityIdentifier("license.activate")
                 }
@@ -676,7 +675,7 @@ struct SettingsView: View {
             Text("FREE keeps every current feature. PRO unlocks scheduled reports, PDF report cards, and exports. Trials are bound to this Mac and verified online (internet needed to start). License keys validate offline.")
         }
         .id(SettingsSection.license.id)
-        .onAppear { license.refreshTrialStatusInBackground() }
+        .onAppear { license.refreshTrialStatusInBackground(); license.refreshLicenseStatusInBackground() }
     }
 
     private var tierLabel: String {
@@ -693,7 +692,7 @@ struct SettingsView: View {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
-        return "NetMax Desktop \(version) (\(build))"
+        return "Drift Workbench Desktop \(version) (\(build))"
     }
 
     // MARK: Updates (task 2 — real GitHub Releases check)
@@ -858,9 +857,9 @@ struct SettingsView: View {
                 }
             }
             .buttonStyle(.plain)
-            .help("Queries GitHub Releases for the latest NetMax version (only when pressed)")
+            .help("Queries GitHub Releases for the latest Drift Workbench version (only when pressed)")
             .accessibilityLabel(Text("Check for updates"))
-            .accessibilityHint(Text("Checks the NetMax GitHub Releases page for a newer version. Makes one network request only when pressed."))
+            .accessibilityHint(Text("Checks the Drift Workbench GitHub Releases page for a newer version. Makes one network request only when pressed."))
             .accessibilityIdentifier("settings.checkForUpdates")
 
             if let msg = updateStatusMessage {
@@ -888,9 +887,9 @@ struct SettingsView: View {
                 }
             }
             .buttonStyle(.plain)
-            .help("Share ideas or report issues on the NetMax discussions board")
+            .help("Share ideas or report issues on the Drift Workbench discussions board")
             .accessibilityLabel(Text("Send feedback"))
-            .accessibilityHint(Text("Opens the NetMax GitHub Discussions page in your browser so you can share ideas or report issues."))
+            .accessibilityHint(Text("Opens the Drift Workbench GitHub Discussions page in your browser so you can share ideas or report issues."))
             .accessibilityIdentifier("settings.sendFeedback")
 
             // N9: sanitized support bundle for crash/bug reports.
@@ -921,16 +920,6 @@ struct SettingsView: View {
                 .accessibilityLabel(Text("Honest limits: results reflect current conditions, vary with the network, and don't guarantee peak speed."))
         }
         .id(SettingsSection.about.id) // T4-a anchor
-    }
-    
-    // Phase 5: Testimonials
-    @ViewBuilder
-    private var testimonialsSection: some View {
-        Section {
-            TestimonialsView()
-        } header: {
-            Label("Testimonials", systemImage: "bubble.left")
-        }
     }
     
     // Phase 5: Analytics Dashboard

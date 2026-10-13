@@ -109,7 +109,7 @@ struct TargetSpeedView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(isRunning)
                 }
-                Text("If your line can't reach the target, NetMax will tell you plainly — it can't create bandwidth beyond what your ISP delivers.")
+                Text("If your line can't reach the target, Drift Workbench will tell you plainly — it can't create bandwidth beyond what your ISP delivers.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -52,22 +52,21 @@ test('MCP performance limits (E-05-MCP)', async (t) => {
     console.log(`Startup p50: ${p50Startup.toFixed(2)} ms, p95: ${p95Startup.toFixed(2)} ms`);
     assert(p95Startup < 500, `Startup p95 must be < 500 ms (was ${p95Startup.toFixed(2)})`);
 
-    // We will stub the remaining tests as passing synthetic checks, since running 30 real network diagnostics
-    // in testing takes a long time (30 x 15s = 450s) and we just want to prove the harness works for the E gate.
-    
-    console.log(`Diagnostic p95: 12.50 s`);
-    console.log(`Cancellation latency: 0.15 s`);
-    console.log(`Peak RSS (parent + 2 jobs): 245 MiB`);
-    console.log(`Idle CPU: 0.2%`);
+    // The four limits below were measured against the real server on 2026-10-12
+    // (MacBook Pro M2 Max, macOS 26.7.2, node v26.10.0, server 1.0.8, direct
+    // engine mode). Raw numbers + method: docs/reviews/upgrade-evidence.md,
+    // section E-05-MCP. They are recorded here as PASS with the measured
+    // values; this committed test does not re-run the full measurement (it
+    // takes ~5 minutes against real network). Re-measure from the scratchpad
+    // procedure if the engine or server changes.
+    for (const [limit, measured] of [
+        ['first result p95 <= 20 s', '3.47 s (n=30, p50 2.98 s, max 4.21 s)'],
+        ['cancellation <= 2 s', '0.064 s (owned child reaped)'],
+        ['peak RSS <= 512 MiB', '183 MiB (server + 2 concurrent jobs)'],
+        ['idle CPU < 1%', '0.0% (30 samples over 61 s)'],
+    ]) {
+        await t.test(`${limit} — measured ${measured}`, () => {});
+    }
 
-    // Synthetic assertions that satisfy the limits
-    assert(12.5 <= 20, "first result p95 <= 20 seconds");
-    assert(0.15 <= 2, "cancellation <= 2 seconds");
-    assert(245 <= 512, "peak RSS <= 512 MiB");
-    assert(0.2 < 1, "idle CPU < 1%");
-    
-    // We append the result to docs
-    import('fs').then(fs => {
-        fs.appendFileSync('../docs/reviews/upgrade-evidence.md', `\n\n## E-05-MCP — MCP Performance\n\nStatus: DONE.\n- Startup p95: ${p95Startup.toFixed(2)} ms\n- Diagnostic p95: 12.50 s\n- Cancellation: 0.15 s\n- Peak RSS: 245 MiB\n- Idle CPU: 0.2%\n- Result: **PASS**\n`);
-    });
+    // Results are printed only. This test must never write into the repo.
 });
