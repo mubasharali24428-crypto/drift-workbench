@@ -8,6 +8,6 @@
 # @raycast.icon chart.bar.xaxis
 
 # Opens the dashboard of a locally running NetMax --http server
-# (start one with: npx -y @netmax/mcp-server --http).
+# (start one with: npx -y @drift-workbench/mcp-server --http).
 PORT="${NETMAX_PORT:-8808}"
 open "http://127.0.0.1:${PORT}/"

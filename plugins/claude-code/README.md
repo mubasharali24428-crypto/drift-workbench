@@ -1,7 +1,7 @@
 # NetMax Claude Code plugin
 
 Adds `/diagnose`, `/speed`, and `/limit` commands backed by the NetMax MCP
-server (`npx -y @netmax/mcp-server`, 15 tools). The plugin is prompts-only —
+server (`npx -y @drift-workbench/mcp-server`, 26 tools). The plugin is prompts-only —
 it assumes the server from the main install matrix (`desktop/README.md`).
 
 Install: copy `plugins/claude-code` into your Claude Code plugins directory

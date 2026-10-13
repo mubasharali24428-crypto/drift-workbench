@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ENTRY_KEY="netmax"
-ENTRY_JSON='{"command":"npx","args":["-y","@netmax/mcp-server"]}'
+ENTRY_JSON='{"command":"npx","args":["-y","@drift-workbench/mcp-server"]}'
 
 merge_into() { # $1 = config path
   local cfg="$1"
@@ -45,7 +45,7 @@ merge_into "$HOME/Library/Application Support/Claude/claude_desktop_config.json"
 cat <<'EOF'
 
 Manual steps (different config shapes — not automated):
-- Codex CLI: ~/.codex/config.toml -> [mcp_servers.netmax] command="npx" args=["-y","@netmax/mcp-server"]
+- Codex CLI: ~/.codex/config.toml -> [mcp_servers.netmax] command="npx" args=["-y","@drift-workbench/mcp-server"]
 - Gemini: ~/.gemini/config/mcp_config.json -> add netmax to mcpServers (same entry shape as above)
 - VS Code Continue: ~/.continue/config.json -> docs at desktop/README.md install matrix
 EOF

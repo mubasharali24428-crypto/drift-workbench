@@ -19,7 +19,7 @@ plus optional `netmax.pythonPath` / `NETMAX_PYTHON`.
 ## Install (local, no marketplace)
 
 ```bash
-cp -r plugins/vscode ~/.vscode/extensions/netmax-trends-1.0.7
+cp -r plugins/vscode ~/.vscode/extensions/netmax-trends-1.0.8
 # then reload VS Code and run: NetMax: Show Trends
 ```
 

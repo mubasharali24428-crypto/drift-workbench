@@ -2,7 +2,7 @@
   "name": "netmax-trends",
   "displayName": "NetMax Trends",
   "description": "Trend charts for NetMax network diagnostics (reads the macOS app history; zero dependencies)",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publisher": "mubasharali24428-crypto",
   "license": "MIT",
   "engines": {
