@@ -1,3 +1,4 @@
+import { AppShowcase } from "@/components/AppShowcase";
 import { DeepDive } from "@/components/DeepDive";
 import { Faq } from "@/components/Faq";
 import { FinalCta } from "@/components/FinalCta";
@@ -43,6 +44,7 @@ export default function Page() {
         <ReadoutStrip />
         <ToolGrid />
         <HowItWorks />
+        <AppShowcase />
         <DeepDive />
         <Transcript />
         <Metrics />

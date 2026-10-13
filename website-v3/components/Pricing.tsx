@@ -12,6 +12,7 @@ export function Pricing() {
         <div className="mx-auto mt-16 max-w-md rounded-md border border-border bg-card p-8 text-left">
           <p className="font-mono text-mono text-muted-foreground">{PRICING.name}</p>
           <p className="mt-2 font-display text-display-lg font-semibold">{PRICING.price}</p>
+          <p className="mt-2 text-small text-muted-foreground">{PRICING.note}</p>
           <ul className="mt-6 space-y-3">
             {PRICING.points.map((point) => (
               <li key={point} className="flex gap-3 text-body">

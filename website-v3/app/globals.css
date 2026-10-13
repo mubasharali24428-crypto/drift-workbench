@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source not "../*.md";
 
 /*
  * Drift Workbench: design tokens. Source of truth: DESIGN.md.

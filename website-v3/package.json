@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",
-    "check:prohibited": "! rg -n \"bg-(gradient|linear|radial|conic)|\\b(from|via|to)-|shadow-|backdrop-|rounded-full|console\\.log|: any\\b|lorem\" app components lib --glob '!app/globals.css'",
+    "check:prohibited": "command -v rg >/dev/null && ! rg -n \"bg-(gradient|linear|radial|conic)|\\b(from|via|to)-|shadow-|backdrop-|rounded-full|console\\.log|: any\\b|lorem\" app components lib --glob '!app/globals.css'",
     "lint": "eslint .",
     "format:check": "prettier --check app components lib content"
   },

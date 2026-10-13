@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PulseMark } from "@/components/PulseMark";
 import { NAV_LINKS } from "@/content/copy";
@@ -11,6 +12,9 @@ const LINK =
 
 export function Nav() {
   const [open, setOpen] = useState(false);
+  // Section anchors only resolve on the home page. Elsewhere they need the route prefix.
+  const home = usePathname() === "/";
+  const hrefFor = (h: string) => (home || !h.startsWith("#") ? h : `/${h}`);
 
   useEffect(() => {
     if (!open) return;
@@ -24,10 +28,10 @@ export function Nav() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background">
+    <header className="sticky top-0 z-50 px-4 pt-3 sm:px-6">
       <nav
         aria-label="Primary"
-        className="mx-auto flex h-16 max-w-wide items-center justify-between px-4 sm:px-6"
+        className="mx-auto flex h-14 max-w-wide items-center justify-between rounded-md border border-border bg-card px-4"
       >
         <Link
           href="/"
@@ -39,7 +43,7 @@ export function Nav() {
         <ul className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map((l) => (
             <li key={l.href}>
-              <a href={l.href} className={LINK}>
+              <a href={hrefFor(l.href)} className={LINK}>
                 {l.label}
               </a>
             </li>
@@ -82,13 +86,13 @@ export function Nav() {
       {open && (
         <div
           id="mobile-menu"
-          className="fixed inset-x-0 bottom-0 top-16 z-40 bg-background px-4 py-8 md:hidden"
+          className="fixed inset-x-0 bottom-0 top-20 z-40 bg-background px-4 py-8 md:hidden"
         >
           <ul className="flex flex-col">
             {[...NAV_LINKS, { label: "GitHub", href: SITE.repoUrl }].map((l) => (
               <li key={l.href} className="border-b border-border">
                 <a
-                  href={l.href}
+                  href={hrefFor(l.href)}
                   onClick={() => setOpen(false)}
                   className="flex min-h-16 items-center font-display text-heading font-semibold"
                 >

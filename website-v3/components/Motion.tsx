@@ -2,7 +2,15 @@
 
 import { useEffect } from "react";
 import "lenis/dist/lenis.css";
-import { gsapEase, lenis, parallax, pinned, prefersReducedMotion, reveal } from "@/lib/motion";
+import {
+  appWindow,
+  gsapEase,
+  lenis,
+  parallax,
+  pinned,
+  prefersReducedMotion,
+  reveal,
+} from "@/lib/motion";
 
 // Renders nothing. Loads GSAP, ScrollTrigger and Lenis after mount, so none of it is in
 // the first-load bundle. Under reduced motion it does nothing: the page stays static.
@@ -57,6 +65,26 @@ export function Motion() {
               scrub: parallax.scrub,
             },
           });
+        }
+
+        // The app window settles into place as it scrolls in. Scrubbed, so it never replays.
+        const appEl = document.querySelector("[data-app-window]");
+        if (appEl) {
+          gsap.fromTo(
+            appEl,
+            { y: appWindow.y, scale: appWindow.scale },
+            {
+              y: 0,
+              scale: 1,
+              ease: "none",
+              scrollTrigger: {
+                trigger: appEl,
+                start: appWindow.start,
+                end: appWindow.end,
+                scrub: appWindow.scrub,
+              },
+            },
+          );
         }
 
         // The one pinned section. Small or short viewports keep the four steps stacked.

@@ -1,7 +1,8 @@
 import { HERO } from "@/content/copy";
 import { SITE } from "@/lib/site";
 
-// Measured values from one run of the local probe engine on one machine.
+// Measured values from one run of the published @drift-workbench/mcp-server@1.0.8
+// on one machine (2026-10-12; packet_loss count 10, bufferbloat 8 streams, 10 s).
 // Targets are public resolvers; no hostnames or local IPs.
 // One value per line so every line fits at 375px without wrapping.
 export function Terminal() {
@@ -36,11 +37,11 @@ export function Terminal() {
             <span className="text-muted-foreground">agent › </span>
             bufferbloat
             {"\n"}
-            {"  "}idle <span className="text-accent">63.8 ms</span>
+            {"  "}idle <span className="text-accent">123.0 ms</span>
             {"\n"}
-            {"  "}loaded <span className="text-accent">+542.6 ms</span>
+            {"  "}loaded <span className="text-accent">+284.5 ms</span>
             {"\n"}
-            {"  "}grade <span className="text-destructive">F</span>
+            {"  "}grade <span className="text-destructive">D</span>
             {"\n\n"}
             <span className="text-muted-foreground">agent › </span>
             latency rises under load;

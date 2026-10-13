@@ -45,6 +45,15 @@ export const parallax = {
   scrub: 0.6,
 } as const;
 
+/** App window entrance: rises and settles into full size as it scrolls into view. Transform only. */
+export const appWindow = {
+  y: 56,
+  scale: 0.94,
+  scrub: 0.6,
+  start: "top 95%",
+  end: "top 35%",
+} as const;
+
 /** The one pinned section: detect, explain, prove, export. */
 export const pinned = {
   steps: 4,

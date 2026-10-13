@@ -21,7 +21,7 @@ These apply only to a Pages project connected to Git. The Phase 7 plan uses Dire
 | `NEXT_PUBLIC_SITE_URL` | the final origin, no trailing slash, e.g. `https://drift.example` |
 
 `NEXT_PUBLIC_SITE_URL` feeds the canonical link, Open Graph URLs, sitemap, robots and JSON-LD.
-Until it is set they use the placeholder `https://drift-workbench.pages.dev`, which is not a project anyone has claimed.
+Until it is set they use the apex, `https://mubasharbuilds.com`.
 It is read at BUILD time, so it must be set before `pnpm build`. Dashboard variables are used by Git builds; with Direct
 Upload the build runs on your machine, so pass it in the build command: `NEXT_PUBLIC_SITE_URL=https://<origin> pnpm build`.
 Do not set it to an empty string (the build throws) or add a trailing slash.

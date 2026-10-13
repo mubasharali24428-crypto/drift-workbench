@@ -22,16 +22,17 @@ When uncertain, choose the more restrained, more specific, more confident option
 
 ## 3. Status (as of 2026-10-11)
 
-- **Phases 1-3: done, approved.** Tokens in OKLCH, `--color-*: initial` strips the default palette, one radius (10px), `border-strong` for 3:1 control outlines. Hero: centered, headline "Your AI agent is blind to the network. Fix that." (green accent), `CommandBar` (install command + copy), giant `Terminal` with REAL values (packet_loss target 1.1.1.1 count 10 loss 0.0%; bufferbloat idle 63.8 ms, loaded +542.6 ms, grade F), Gumroad $29 link, `Nav` with mobile overlay, `ReadoutStrip` (20 / 0 / 0 / 100%).
-- **Phase 4 (sections): DONE. Every section was founder-approved one at a time and screenshot-verified at 375 / 768 / 1440.** Page order: hero, readout strip, ecosystem grid (`#tools`, 20 cards), How it works (`#how`), Deep dive (`#deep-dive`, the ONE pinned section), Transcript (`#transcript`, "Illustrated flow"), Metrics (`#metrics`), Pricing (`#pricing`, one $29 tier), FAQ (`#faq`, native `<details>`, 5 Q&As), Final CTA (`#install-cta`), footer (npm 1.0.7 badge, GitHub).
+- **Phases 1-3: done, approved.** Tokens in OKLCH, `--color-*: initial` strips the default palette, one radius (10px), `border-strong` for 3:1 control outlines. Hero: centered, headline "Your AI agent is blind to the network. Fix that." (green accent), `CommandBar` (install command + copy), giant `Terminal` with REAL values (packet_loss target 1.1.1.1 count 10 loss 0.0%; bufferbloat idle 123.0 ms, loaded +284.5 ms, grade D; refreshed 2026-10-12, see 9b), Gumroad $29 link, `Nav` with mobile overlay, `ReadoutStrip` (20 / 0 / 0 / 100%).
+- **Phase 4 (sections): DONE. Every section was founder-approved one at a time and screenshot-verified at 375 / 768 / 1440.** Page order: hero, readout strip, ecosystem grid (`#tools`, 20 cards), How it works (`#how`), Deep dive (`#deep-dive`, the ONE pinned section), Transcript (`#transcript`, "Illustrated flow"), Metrics (`#metrics`), Pricing (`#pricing`, one $29 tier), FAQ (`#faq`, native `<details>`, 5 Q&As), Final CTA (`#install-cta`), footer (npm 1.0.8 badge, GitHub).
 - **Phase 5 (motion pass): audited, done.** Reveals are once-only and set by script (no `opacity:0` in the built HTML, so content is visible without JS). Hero parallax is transform-only. Every transition is color-only, 180 ms. No hover scale, bounce or typing. Exactly one pin (`start: "top 80px"`, gate `(min-width: 768px) and (min-height: 800px)`; shorter or narrower viewports keep the stacked layout). Anchors clear the 65px sticky nav. Reduced motion verified by forcing `matchMedia`: no pin, no Lenis, no reveals, no parallax. `Motion.tsx` refreshes ScrollTrigger on `document.fonts.ready` and removes its `load` listener on cleanup.
 - **Phase 6 (quality gates): done on the LOCAL build.** Lighthouse 13.5.0, headless Chrome 154, served with brotli and the `_headers` caching. Mobile (3 identical runs): performance 98, accessibility 100, best practices 100, SEO 100; LCP 2.3 s, TBT 30 ms, CLS 0. Desktop: 100 / 100 / 100 / 100. Install command checked byte-for-byte: 6 exact occurrences in `out/index.html`, no variants, no non-ASCII near it. `npm view @drift-workbench/mcp-server version` = 1.0.7. Banned-word scan of the built HTML: 0 hits (after the "throughput" edits). All in-page anchors resolve; GitHub and Gumroad return 200 (npm returns 403 to curl only because it blocks bots).
+- **Lighthouse on the other pages (2026-10-12, LOCAL build, same method as the homepage: Lighthouse 13.5.0, headless Chrome, Pages-like server, 3 mobile runs + 1 desktop each).** All runs: accessibility, best practices and SEO 100, CLS 0, no runtime errors. `/docs`: mobile performance 98 / 99 / 99 (LCP 1.95 to 2.34 s, TBT 31 to 34 ms); desktop 100 / 100 / 100 / 100. `/agents/pricing`: mobile 99 / 98 / 98 (LCP 1.95 to 2.33 s, TBT 15 to 30 ms); desktop 100 across the board. `/changelog`: mobile 98 / 98 / 98 (LCP 2.33 s, TBT 27 to 31 ms); desktop 100 across the board. Same bar as the homepage (mobile 98, desktop 100). The "Network dependency tree" insight scores 0 on every page including the homepage; it has weight 0 in the performance category. Still not measured: the DEPLOYED URL.
 - **Phase 7 (Cloudflare Pages deploy prep): PLAN WRITTEN AND ATTACKED, PREVIEW ARTIFACT STAGED, NOTHING DEPLOYED.** Founder guardrail (binding): deploy to a Cloudflare Pages PREVIEW first, never cut over production, state how the preview avoids touching production, and bring the preview URL back for review before anything goes live. Done: research (Cloudflare docs, how production deploys today, deploy-readiness), a plan, four adversarial reviews of it (all four flagged real problems; fixed below), a preview artifact that passes six pre-upload gates, a tested command guard, and a repaired proof tool. Waiting on founder decisions (section 10). No wrangler installed, no Cloudflare login, nothing uploaded, nothing pushed.
 
 ## 4. Decisions already made (do not re-litigate)
 
 1. Grade "F" is red (`text-destructive`). One documented exception to "destructive = errors only" (in DESIGN.md).
-2. No Docs link in the nav until the founder decides what to do with `/drift/docs/` (it 404s in the new build).
+2. The nav has a live Docs link to `/docs`, a new in-repo page (`app/docs/`, `components/Docs.tsx`, `DOCS` in `content/copy.ts`). It is not the old `/drift/docs/`, which still 404s in this build. The founder approved the page on 2026-10-12. Content comes from the MCP server source, the READMEs and the approved FAQ and Pricing copy. The old docs' Homebrew line, "free forever" and Pro-feature claims were dropped on purpose and stay dropped until he gives exact wording. Inline prose links are exempt from the 44px rule.
 3. Terminal is one value per line, with a `text-mono-sm` token (0.75rem) below `md`, so it never wraps at 375.
 4. Tool descriptions: verbatim from the inputs file EXCEPT five, each edited by one word because the originals contained banned words. **The founder approved all five.**
    - `eco_bloat`: "Bufferbloat estimate using ~100KB of data" (was "Quick bufferbloat…")
@@ -110,6 +111,152 @@ cd out && python3 -m http.server 8811 --bind 127.0.0.1
 - **Plaintext credentials on this machine:** an npm auth token in `~/.npmrc`; two npm tokens typed into `npm config set` in `~/.zsh_history`; several API keys exported in `~/.zshrc`. By its own disclosure, one research agent's over-broad command DISPLAYED two of the npm tokens in its tool output, so they sit in a local session transcript. Rotate the npm tokens (the repo's `SESSION-HANDOFF.md` already says one needs rotation).
 - **Placeholder host is unclaimed:** `drift-workbench.pages.dev` does not resolve today, but anyone could claim it, and the repo default points canonical, og:url, sitemap and robots at it. Decide the real origin; consider making `lib/site.ts` throw at build time when `NEXT_PUBLIC_SITE_URL` is unset (a source change, propose separately).
 - **Hygiene:** Tailwind v4 scans every non-ignored file including `*.md`, so words in the docs can add stray utilities to the shipped CSS (the old HANDOFF text added `.table{display:table}`). Harmless but real; `@source not` in `globals.css` would stop it. `check:prohibited` passes silently when ripgrep is missing.
+
+## 9b. npm 1.0.8: published, site updated (2026-10-12)
+
+The founder published `@drift-workbench/mcp-server@1.0.8`. `npm view` confirmed it: the `latest` tag is 1.0.8, and `dist.integrity` (`sha512-tIzVUsPJXON2…M9UA==`, shasum `259b876a…`) equals the tarball verified before publish, so the published bytes are the ones that were checked. On the site, the FAQ "Which platforms are supported?" answer and the `/docs` Windows line are back to the founder's original wording, and `npmVersion` in `lib/site.ts` is `1.0.8`.
+
+Verified against the published package (2026-10-12): `npx -y @drift-workbench/mcp-server@1.0.8` from an empty directory with a fresh npm cache and no `.npmrc` reports server version 1.0.8 and registers 20 tools, and its engine is byte-identical to `desktop/engine/` (25 files). The hero terminal and the Transcript section now carry that run's values: packet_loss 0.0%, bufferbloat idle 123.0 ms, loaded +284.5 ms, grade D (they were 63.8 ms, +542.6 ms and F on 2026-10-11). It is one run on one machine, and the two runs differ a lot, so the figures vary with the network, not with the version. `evidence_export` was run end to end on the same package against the real desktop history: two records exported, each record's sha256 recomputes, no IPv4 or MAC address left in the bundle, history files unchanged. An out-of-range record ID fails honestly, but the message is wrapped in an argparse usage dump (`export-evidence` calls `parser.error`).
+
+Caveat: the full Windows MCP suite has still not been run, so "runs anywhere Node runs" is the founder's wording, not something verified end to end.
+
+Repo state: every version pin in `/Users/user/netmax-app` is 1.0.8, `desktop/engine/` is synced (25 files), and pytest fails on mirror drift or an unmirrored import. Nothing is pushed. The Cloudflare preview still has the older build; refreshing it needs the founder's wrangler login, and production cutover stays his call.
+
+Fixed in the repo before publish (2026-10-12): `server.json`, `desktop/package-lock.json` and the shipped `desktop/README.md` now use `@drift-workbench/mcp-server` and say 20 tools (the mcpb manifest lists all 20). The npm README is rebranded in prose, has no Homebrew block and links the GitHub releases page. `MCP-README.md` has generic paths. The plugin scripts and `tests/test_plugins.py` use the new package name. The perf test never writes into the repo; its four unmeasured limits are TODO, not PASS.
+
+Still open (founder's decisions):
+
+- The Homebrew cask `/Users/user/homebrew-netmax/Casks/netmax.rb` is still 1.0.7. It installs the desktop-app DMG at `releases/download/v<version>/…dmg` with a pinned sha256, so bumping `version` without a built and uploaded 1.0.8 DMG breaks `brew install`. Leave it until a DMG exists. `desktop/scripts/sync_versions.sh` in apply mode would edit that file outside the repo and does not cover `server.json`, the manifests or the lockfiles. Use `--check` only.
+- The server version is hardcoded in four places in `desktop/netmax-mcp-server.mjs`; it is not read from `package.json`.
+- Still on the old name or brand, deliberately untouched: the mcpb manifest's `name` and `display_name` ("netmax" / "NetMax MCP Server"); the Swift app's UI strings (README line about the "NetMax" menu-bar item stays accurate until they change); `docs/MCP-DIRECTORY-SUBMISSIONS.md`, `docs/MARKETING-COPY.md`, `docs/product/landing-claims.md` and the old `landing/index.html` (it shows `npx @netmax/mcp-server`; do not deploy it as is).
+- ROADMAP task E-05-MCP also requires first-result p95, cancellation, peak RSS and idle CPU limits. None is measured yet (`test_mcp_performance_limits.mjs` reports them as TODO).
+
+## 9c. Paid tier: license keys on the registry worker + /agents/pricing (built 2026-10-12, uncommitted, NOT deployed)
+
+Scope the founder approved: worker and website only; Swift app untouched; Python reference server stays trial-only; no true x402; enforcement at license verification and a `requireLicense` gate for future remote/paid endpoints, never per local probe. One paid tier ($29 Founding License); the MCP server stays free; no MCP tool is gated.
+
+**Worker (`/Users/user/netmax-app/trial-server-worker`, details in its README):** new `src/license.js`, additive store methods, `licenses` and `license_seats` tables in `schema.sql`, routes `POST /v1/license/activate` and `GET /v1/license/status` in `worker.js`, `scripts/gen-license-key.mjs`. Gumroad issues one key per sale; the worker verifies it with Gumroad's license API, binds it to the machine fingerprint (2 seats per key), and returns an Ed25519 token. Only `SHA-256(key)` is stored; no email. Tokens verify offline with a public key only (nothing secret in the app). `trial.js` and the 28 trial tests are untouched. `wrangler.toml` worker name is now `drift-trial-registry` (the deployed one) and has a `GUMROAD_PRODUCT_ID` var; its `database_id` and `GUMROAD_PRODUCT_ID` are still placeholders for the founder. License routes fail closed (500) while those are unset; trial routes keep working.
+
+**Verified:** `npm test` in the worker: 64 of 64 (28 trial, 28 license, 8 worker.js on real SQLite via `node:sqlite`, including the atomic seat bind under parallel activations). A worker-minted token verifies in `node:crypto` and in Swift CryptoKit, and a different fingerprint fails. Python `tests/test_trial_server.py`: 18 passed. Not verified: the Cloudflare Workers runtime itself (Ed25519 WebCrypto is standard there, but it was only run on Node 22), and Gumroad's live response (the field names `refunded` and `chargebacked` and the key's letter case come from search results of a docs mirror; the founder is confirming on his side).
+
+**Website:** `content/agents-pricing.ts` is the one source. It feeds `/agents/pricing` (page with JSON-LD) and `/agents/pricing.json` (static route), and uses only wording already approved in `copy.ts`: free MCP server, 14-day trial, $29 one-time Founding License, and an honest "agent payments: not supported" note. It does not mention license keys, x402 or any Pro feature list. `/agents/pricing` is in the sitemap, not in the nav. Checked: JSON, HTML and JSON-LD agree; 0 banned words; one H1; no overflow at 375 px. `product.url` follows `SITE.url` (placeholder host until a domain exists).
+
+**Held on purpose (the founder's call):**
+- The privacy copy ("The only network call is one trial activation", in the FAQ and `/docs`) becomes untrue once the app calls the license routes. Leave it until then, then reword with approval.
+- Swift wiring: `LicenseGate` still does only a local format check (`docs/LICENSE-GATE.md` describes that). The app needs the public key printed by `gen-license-key.mjs`, plus calls to activate (periodically) and status.
+- Gumroad: turn on per-sale license keys, retitle the listing (still "NetMax Desktop Pro"), copy the product ID.
+- Deploy: exact commands are in the worker README ("Deploy"). Nothing was run against Cloudflare.
+- Later: true x402 micropayments; a real remote/paid endpoint (use `requireLicense`).
+
+## 9d. Changelog page (built 2026-10-12, uncommitted, preview-only)
+
+`/changelog` shows the published npm releases 1.0.8 (2026-10-12) and 1.0.7 (2026-10-10); dates are the registry's publish times. Source: `content/changelog.ts`, built from `RELEASE-NOTES.md` and checked against the published package: 1.0.7 has 26 files and 1.0.8 has 31 (the five modules added), the 1.0.7 engine mirror at git HEAD contains the long-run fix and the `limit` governor, and 1.0.7 is the first version under `@drift-workbench/mcp-server` (the old `@netmax/mcp-server` exists on the registry). The page is in the sitemap, not in the nav or footer (your call).
+
+Left out on purpose: the 1.0.7 desktop-app items (Mode Lab, Speed Limit card, Quick Test length picker), because no DMG for those versions is verified; repo-only 1.0.8 items (the parity test, `py-modules`, `audit --strict`); and the measured numbers from the 1.0.7 notes, which could not be re-run. The `limit` governor entry says it is not an MCP tool, since `strict_limit` uses kernel-level shaping. `RELEASE-NOTES.md` no longer carries the "(draft, not published)" marker. If you want the desktop items in, give the DMG version they shipped in.
+
+Held for you: email capture (needs a provider) and analytics (needs your ruling on the script and a footer line). Neither is started.
+
+## 9e. Task 3: verification & hygiene debt (done 2026-10-12, uncommitted, nothing pushed)
+
+1. **Version single source.** `desktop/netmax-mcp-server.mjs` no longer hardcodes
+   the version: `SERVER_VERSION` is read from `desktop/package.json` at startup
+   (falls back to `"unknown"`, never crashes) and feeds the MCP `serverInfo`,
+   the stdio banner, and both web status lines. New
+   `desktop/test_mcp_version_source.mjs`: 3/3 pass (serverInfo + banner match
+   package.json; no hardcoded copy in source). Negative control: a tampered
+   copy with a hardcoded divergent version fails the test as expected.
+2. **evidence_export error.** `netmax.py` `export-evidence` no longer calls
+   `parser.error` on a bad record ID: one stderr line
+   (`export-evidence: record id 'rec-99' out of range: history holds N records`),
+   exit 1, no argparse usage dump. Mirror `desktop/engine/netmax.py` re-synced
+   (byte-identical, parity pytest green). Two new CLI tests in
+   `tests/test_export_manifest.py` lock the one-line behavior; happy path
+   verified live (exit 0, bundle valid).
+3. **E-05 measured.** All four TODO limits measured against the real 1.0.8
+   server on this Mac (M2 Max, macOS 26.7.2, node v26.10.0, direct engine
+   mode): first-result p95 3.47 s (n=30 `packet_loss`, limit 20 s),
+   cancellation 0.064 s (limit 2 s), peak RSS 183 MiB (server + 2 concurrent
+   jobs, limit 512 MiB), idle CPU 0.0% (30 samples / 61 s, limit 1%).
+   Raw numbers + method in `docs/reviews/upgrade-evidence.md` (E-05-MCP, now
+   DONE). `test_mcp_performance_limits.mjs` flips the four TODOs to PASS with
+   the measured values. Note: `dns_ranking` fails honestly here (UDP/53 to
+   public resolvers unreachable); `packet_loss` (ICMP) used instead.
+4. **Windows suite.** Plan only: `docs/WINDOWS-TEST-PLAN.md` (exact PowerShell,
+   what to capture, where to save). Not run — the agent cannot operate inside
+   the Windows guest; the run is MAX's hands. Never claimed as passed.
+5. **npm README.** `desktop/README.md` 242 -> 69 lines (user-facing
+   install/usage only); ~180 lines of internal build/verify/distribution
+   notes moved verbatim to `desktop/docs/BUILD-NOTES.md` (repo only, not
+   shipped). `npm pack --offline --ignore-scripts` -> 31 files; tarball
+   scanned clean: no `@netmax/`, no `brew`, no `/Users/` personal paths
+   (one `/Users/Shared` system constant), no secret patterns.
+6. **Old-name leftovers.** HELD for MAX's answer to (d).
+7. **Clutter.** 70 gitignored scratch files (`fix_*`/`patch_*`/`builder*`/
+   `mega_*` in root, `run_res_test*.mjs` in desktop/) — unreferenced by
+   tracked code, safe to delete; 10 `*.bak-rename` files (untracked, visible
+   in git status) are pre-rename snapshots, verified superseded. Nothing
+   deleted; proposal with MAX.
+
+Verified this session: full pytest 1299 passed + 5 subtests (exit 0); node
+suites (version/perf/fleet/resource) 31/31; `uv lock --check --offline`
+exit 0; `netmax audit --strict` 0 errors (1 pre-existing TOOL_COUNT warning,
+untouched by this work); `git status` shows nothing staged or committed.
+NOT verified: Windows suite (plan only); the packed tarball was scanned but
+not published.
+
+## 9f. Task 1: app-side paid-license activation (done 2026-10-12, uncommitted, nothing pushed)
+
+Worker contract unchanged (trial-server-worker `npm test` still 64/64).
+
+1. **LicenseClient** (new section in `TrialRegistryClient.swift`, same conventions:
+   injectable transport, `REPLACE-WITH-*` fail-closed). `POST /v1/license/activate`
+   and `GET /v1/license/status` against the registry worker. The app embeds ONLY
+   the Ed25519 public key (`embeddedLicensePublicKey =
+   "REPLACE-WITH-DEPLOYED-LICENSE-PUBLIC-KEY"` — placeholder fails closed: no
+   unverified Pro, no network). Token verifies offline with CryptoKit over
+   `license-v1|<fingerprint_sha256>|<key_sha256>|<issued_at>`.
+2. **LicenseGate**: `activate(key)` is now server-verified (key format is the
+   server's business — the old 5x4 `isWellFormedKey`/`KEY_PATTERN` is gone).
+   Verified bundle persisted under `netmax.prefs.*` (`licenseKeySHA256`,
+   `licenseToken`, `licenseIssuedAt`, `licenseVerifiedAt` — hashes/signature/
+   timestamps, nothing secret). `resolvedTier` grants Pro only on a valid
+   offline token for this machine. `refreshLicenseStatus()` runs on launch
+   (cheap status read) and a full re-activate at most every 24h while online —
+   this is how refunds/revokes propagate. 503/offline keeps the last verified
+   state; revocation drops the bundle but keeps the key string (non-destructive,
+   data never touched). `deactivate()` clears key + bundle.
+3. **SettingsView**: key field hint/placeholder updated for Gumroad keys
+   (no more 5×4 format gate on the Activate button); license refresh added to
+   the section's `onAppear`.
+4. **Tests** (`LicenseGateTests.runAll()`): mint a real Ed25519 keypair in-test
+   and serve stub-signed tokens — valid token, tampered token, wrong
+   fingerprint, seat-limit + invalid-key denials, blank key (no network),
+   placeholder public key (fail-closed), revocation via status
+   (Pro dropped, key kept), offline + 503 keep last verified Pro, 24h throttle
+   (no network when fresh). Also fixed two pre-existing harness bugs the work
+   exposed: the throttle test backdated shared defaults, and the
+   "placeholder host" trial test used the default client (which now points at
+   the deployed worker — it hit the real network); it now uses an explicit
+   placeholder URL.
+5. **Docs**: `docs/LICENSE-GATE.md` rewritten for the server-verified model;
+   `RELEASE-NOTES.md` has an `Unreleased` entry (no version bump).
+   Privacy-copy rewrite is PROPOSED ONLY (awaiting MAX's answer to (b)).
+
+Verified this session: `swift build -c release` green; `verify_phase1.sh`
+6/6 PASS (step f `LICENSE_GATE_OK`); worker `npm test` 64/64.
+NOT verified: no live end-to-end check with a real license key (deliberately —
+needs MAX's deployed worker + real public key + a real Gumroad key). The e2e
+check script will be written when MAX confirms deployment and hands over the
+public key.
+
+## 9g. Apex domain, name cleanup, privacy copy (2026-10-12, uncommitted, nothing deployed)
+
+- **Decision (founder):** the site goes on the apex `https://mubasharbuilds.com` in a NEW Pages project (suggested name `drift-workbench`). The old `mubasharbuilds` project is not touched. The founder does the Cloudflare login, DNS and deploy. DNS is at Spaceship and mail is on Zoho, so every record (3 Zoho MX, SPF, zoho-verification TXT, DKIM `zmail`) must be copied to the Cloudflare zone before the nameserver switch. DNSSEC is ON (DS at the registry, 86400 s TTL): remove the DS at Spaceship and wait 24 h before switching. Steps: `LAUNCH.md` in `/Users/user/Desktop/mubasharbuilds-site 2/netmax/`.
+- `lib/site.ts` now defaults to the apex, so the "unclaimed placeholder" risk in section 9 no longer applies to builds. Check chain green, `NEXT_PUBLIC_SITE_URL=https://mubasharbuilds.com pnpm build` has zero warnings, no placeholder host in `out/`; against the previous build only the two privacy sentences changed.
+- Go-live decisions (founder, 2026-10-12): the Pricing card carries "Not yet notarized: macOS asks you to confirm the first open." (`PRICING.note`, rendered under the price; checked at 375 and 1440, no overflow); the trial backend is real, so the site copy stands and `landing-claims.md` is stale; privacy wording kept. Still open: Gumroad listing title (dashboard).
+- Live tool sweep (2026-10-13, repo server 1.0.8, scratch HOME, remote-AI settings stripped): 18 of 20 tools verified live. Not run live: `strict_limit` (root, changes system networking) and `fleet_drift_workbench` (peers must be public HTTPS, so no loopback test; its 15 unit tests pass). `dns_ranking` works now (the earlier failure was this network blocking UDP/53). `ai_analyze` dispatches 26 analyses; 12 answer a generic measurement input, the rest need analysis-specific inputs that `list_analyses` does not describe, and 3 fail with a raw Python traceback instead of a clean message. Three suites re-run green: 3 + 15 + 8.
+- Privacy copy (FAQ and `/docs`) now says "trial activation and license checks, made by the desktop app". True only once the licensed app ships.
+- Name cleanup, prose only: mcpb `display_name`, and the product name in `MARKETING-COPY.md`, `MCP-DIRECTORY-SUBMISSIONS.md`, `landing-claims.md` (`landing/index.html` had no prose to change). Held for the founder: `@netmax/mcp-server` in command and link rows, old tool counts, and the stale Homebrew, "Free forever", Pro-list and update-promise lines (left as they were).
 
 ## 10. First steps for the new session
 
