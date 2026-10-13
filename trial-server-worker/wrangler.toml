@@ -1,13 +1,21 @@
-# NetMax trial-registry Worker.
-# Deploy steps are in README.md. The HMAC secret is NEVER stored here —
-# set it with:  wrangler secret put NETMAX_TRIAL_HMAC_SECRET
+# Drift Workbench trial + license registry Worker.
+# Deploy steps are in README.md. Secrets are NEVER stored here — set them with:
+#   wrangler secret put NETMAX_TRIAL_HMAC_SECRET
+#   wrangler secret put LICENSE_ED25519_PRIVATE_KEY
 
-name = "netmax-trial-registry"
+# The deployed worker (verified live 2026-10-10). Was "netmax-trial-registry".
+name = "drift-trial-registry"
 main = "src/worker.js"
 compatibility_date = "2026-10-01"
 
 [[d1_databases]]
 binding = "TRIAL_DB"
 database_name = "netmax-trial-registry"
-# Paste the id printed by `wrangler d1 create netmax-trial-registry` here:
+# Both values must match the DEPLOYED database. Run `npx wrangler d1 list`, then put its
+# name above and its id here before `wrangler deploy` (the placeholder makes the deploy fail).
 database_id = "REPLACE_WITH_WRANGLER_D1_ID"
+
+[vars]
+# Not a secret. Gumroad dashboard: the product's ID. The license routes fail
+# closed (500 server_misconfigured) while this still holds the placeholder.
+GUMROAD_PRODUCT_ID = "REPLACE_WITH_GUMROAD_PRODUCT_ID"

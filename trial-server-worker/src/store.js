@@ -7,6 +7,11 @@
  *       -> throws {code:"TRIAL_DUPLICATE"} when the fingerprint already exists
  *   touch(fp, nowIso)                              -> activation_count++, last_seen = nowIso
  *   rateHit(kind, ip, nowMs, windowMs, limit)       -> true when over the limit
+ * License tier (license.js), keys stored only as SHA-256:
+ *   getLicense(keyHash)                            -> {last_verified, revoked, revoked_reason} | null
+ *   saveLicense(keyHash, {revoked, reason, nowIso}) -> upsert, keeps first_seen
+ *   getSeat(keyHash, fp)                           -> {activated_at} | null
+ *   bindSeat(keyHash, fp, nowIso, maxSeats)        -> "bound" | "exists" | "limit" (atomic)
  *
  * createD1Store(db)  — production adapter over a D1 database binding.
  * createMemoryStore() — in-memory shim with identical semantics, for tests
@@ -75,12 +80,67 @@ export function createD1Store(db) {
         .run();
       return false;
     },
+
+    // ── License tier (see license.js). Keys are stored only as SHA-256. ──
+
+    async getLicense(keyHash) {
+      const row = await db
+        .prepare("SELECT last_verified, revoked, revoked_reason FROM licenses WHERE key_sha256 = ?")
+        .bind(keyHash)
+        .first();
+      return row
+        ? { last_verified: row.last_verified, revoked: row.revoked === 1, revoked_reason: row.revoked_reason }
+        : null;
+    },
+
+    async saveLicense(keyHash, { revoked, reason, nowIso }) {
+      await db
+        .prepare(
+          `INSERT INTO licenses (key_sha256, first_seen, last_verified, revoked, revoked_reason)
+           VALUES (?1, ?2, ?2, ?3, ?4)
+           ON CONFLICT(key_sha256) DO UPDATE SET
+             last_verified = excluded.last_verified,
+             revoked = excluded.revoked,
+             revoked_reason = excluded.revoked_reason`,
+        )
+        .bind(keyHash, nowIso, revoked ? 1 : 0, reason ?? null)
+        .run();
+    },
+
+    async getSeat(keyHash, fp) {
+      return getSeatD1(db, keyHash, fp);
+    },
+
+    /** Atomic: one statement checks "not already bound" and "under the seat limit". */
+    async bindSeat(keyHash, fp, nowIso, maxSeats) {
+      const r = await db
+        .prepare(
+          `INSERT INTO license_seats (key_sha256, fingerprint_sha256, activated_at)
+           SELECT ?1, ?2, ?3
+           WHERE NOT EXISTS (SELECT 1 FROM license_seats WHERE key_sha256 = ?1 AND fingerprint_sha256 = ?2)
+             AND (SELECT COUNT(*) FROM license_seats WHERE key_sha256 = ?1) < ?4`,
+        )
+        .bind(keyHash, fp, nowIso, maxSeats)
+        .run();
+      if (r.meta.changes === 1) return "bound";
+      return (await getSeatD1(db, keyHash, fp)) ? "exists" : "limit";
+    },
   };
+}
+
+async function getSeatD1(db, keyHash, fp) {
+  const row = await db
+    .prepare("SELECT activated_at FROM license_seats WHERE key_sha256 = ? AND fingerprint_sha256 = ?")
+    .bind(keyHash, fp)
+    .first();
+  return row ? { activated_at: row.activated_at } : null;
 }
 
 export function createMemoryStore() {
   const trials = new Map(); // fp -> {trial_start, trial_end, vmSuspected, activation_count, first_seen, last_seen}
   const hits = []; // {kind, ip, ts}
+  const licenses = new Map(); // key_sha256 -> {first_seen, last_verified, revoked, revoked_reason}
+  const seats = new Map(); // "<key_sha256>|<fp>" -> {key_sha256, activated_at}
   return {
     async get(fp) {
       const r = trials.get(fp);
@@ -113,8 +173,34 @@ export function createMemoryStore() {
       hits.push({ kind, ip, ts: nowMs });
       return false;
     },
+    async getLicense(keyHash) {
+      const l = licenses.get(keyHash);
+      return l ? { last_verified: l.last_verified, revoked: l.revoked, revoked_reason: l.revoked_reason } : null;
+    },
+    async saveLicense(keyHash, { revoked, reason, nowIso }) {
+      const l = licenses.get(keyHash);
+      licenses.set(keyHash, {
+        first_seen: l ? l.first_seen : nowIso,
+        last_verified: nowIso,
+        revoked: !!revoked,
+        revoked_reason: reason ?? null,
+      });
+    },
+    async getSeat(keyHash, fp) {
+      const s = seats.get(`${keyHash}|${fp}`);
+      return s ? { activated_at: s.activated_at } : null;
+    },
+    async bindSeat(keyHash, fp, nowIso, maxSeats) {
+      if (seats.has(`${keyHash}|${fp}`)) return "exists";
+      const used = [...seats.values()].filter((s) => s.key_sha256 === keyHash).length;
+      if (used >= maxSeats) return "limit";
+      seats.set(`${keyHash}|${fp}`, { key_sha256: keyHash, activated_at: nowIso });
+      return "bound";
+    },
     // Test introspection only (not part of the contract).
     _trials: trials,
     _hits: hits,
+    _licenses: licenses,
+    _seats: seats,
   };
 }

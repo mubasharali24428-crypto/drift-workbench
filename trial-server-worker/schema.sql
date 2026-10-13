@@ -24,3 +24,20 @@ CREATE TABLE IF NOT EXISTS rate_hits (
 
 CREATE INDEX IF NOT EXISTS idx_rate_hits_kind_ip_ts
     ON rate_hits (kind, ip, ts);
+
+-- Paid tier (Founding License). The raw license key is never stored, only its SHA-256.
+-- Safe to re-run against the deployed database: it only adds tables.
+CREATE TABLE IF NOT EXISTS licenses (
+    key_sha256     TEXT PRIMARY KEY,
+    first_seen     TEXT NOT NULL,
+    last_verified  TEXT NOT NULL,
+    revoked        INTEGER NOT NULL DEFAULT 0,
+    revoked_reason TEXT
+);
+
+CREATE TABLE IF NOT EXISTS license_seats (
+    key_sha256         TEXT NOT NULL,
+    fingerprint_sha256 TEXT NOT NULL,
+    activated_at       TEXT NOT NULL,
+    PRIMARY KEY (key_sha256, fingerprint_sha256)
+);
