@@ -25,9 +25,9 @@ Each external target referenced in `landing/index.html` was verified against liv
 
 | Destination URL / Identifier | Context / Location | Evidence & Verification Status | Verdict |
 | :--- | :--- | :--- | :---: |
-| `https://github.com/mubasharali24428-crypto/netmax` | Header badge, footer | Official upstream Git repository; active tracking branch | **KEEP** |
-| `https://github.com/mubasharali24428-crypto/netmax/releases` | Install section DMG download | Official GitHub releases page for compiled DMG builds | **KEEP** |
-| `https://github.com/mubasharali24428-crypto/netmax/blob/main/LICENSE` | Footer license link | Points directly to MIT license file in repository root | **KEEP** |
+| `https://github.com/mubasharali24428-crypto/drift-workbench` | Header badge, footer | Official upstream Git repository; active tracking branch | **KEEP** |
+| `https://github.com/mubasharali24428-crypto/drift-workbench/releases` | Install section DMG download | Official GitHub releases page for compiled DMG builds | **KEEP** |
+| `https://github.com/mubasharali24428-crypto/drift-workbench/blob/main/LICENSE` | Footer license link | Points directly to MIT license file in repository root | **KEEP** |
 | `https://www.npmjs.com/package/@netmax/mcp-server` | Hero & footer npm link | Verified published npm package (package.json v1.0.7) | **KEEP** |
 | `https://mubasharali03.gumroad.com/l/yzkuez` | Pricing section buy CTA | Active Gumroad product link for Drift Workbench Founding License ($29) | **KEEP** |
 | `brew tap mubasharali24428-crypto/netmax && brew install --cask netmax` | Install section code block | Homebrew tap and cask formula configuration | **KEEP** |
@@ -70,7 +70,7 @@ Each external target referenced in `landing/index.html` was verified against liv
 | **"Start Diagnostics"** | Dashboard preview | Anchor `#install` | Will point to installation guide | **KEEP** (under D-04-DEMO) |
 | **"Buy Founding License"** | Pricing card | `https://mubasharali03.gumroad.com/l/yzkuez` | Verified Gumroad purchase link | **KEEP** |
 | **"Get started"** | Pricing card | Anchor `#install` | Scrolls to install section | **KEEP** |
-| **"Download the DMG"** | Install section note | `https://github.com/mubasharali24428-crypto/netmax/releases` | Verified GitHub releases destination | **KEEP** |
+| **"Download the DMG"** | Install section note | `https://github.com/mubasharali24428-crypto/drift-workbench/releases` | Verified GitHub releases destination | **KEEP** |
 | **"Start Free Trial"** | Pro subscription card | Button with toast handler | Non-operational simulated trial | **REMOVE** (D-04-SUBSCRIPTION) |
 | **"Contact Sales"** | Team subscription card | Button with toast handler | Non-operational simulated sales contact | **REMOVE** (D-04-SUBSCRIPTION) |
 | **"Export My Data"** | Backup section | Button `#exportDataBtn` | Simulated fake export toast | **REMOVE** (D-04-OPERATIONS) |

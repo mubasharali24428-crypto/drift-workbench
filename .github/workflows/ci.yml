@@ -230,22 +230,22 @@ jobs:
       - name: Assert universal slices (lipo) and Info.plist
         working-directory: desktop
         run: |
-          lipo -info build/NetMaxDesktop.app/Contents/MacOS/NetMaxDesktop | grep -q 'arm64'
-          lipo -info build/NetMaxDesktop.app/Contents/MacOS/NetMaxDesktop | grep -q 'x86_64'
-          plutil -lint build/NetMaxDesktop.app/Contents/Info.plist
+          lipo -info "build/Drift Workbench.app/Contents/MacOS/NetMaxDesktop" | grep -q 'arm64'
+          lipo -info "build/Drift Workbench.app/Contents/MacOS/NetMaxDesktop" | grep -q 'x86_64'
+          plutil -lint "build/Drift Workbench.app/Contents/Info.plist"
           echo "universal architecture and Info.plist OK"
 
       - name: Codesign verify (ad-hoc)
         working-directory: desktop
         run: |
-          codesign -v build/NetMaxDesktop.app && echo "codesign OK"
+          codesign -v "build/Drift Workbench.app" && echo "codesign OK"
 
       # W18 (audit F2 follow-up): deep seal check — catches any resource
       # added after signing (e.g. __pycache__ from a stray engine run).
       - name: Deep seal integrity check (F2 follow-up)
         working-directory: desktop
         run: |
-          codesign -v --deep --strict build/NetMaxDesktop.app \
+          codesign -v --deep --strict "build/Drift Workbench.app" \
             && echo "deep seal OK"
 
       # W18: engine-dir permission gate — the shipped bundle's engine files
@@ -279,7 +279,7 @@ jobs:
 
           BAD=0
           shopt -s nullglob
-          for f in build/NetMaxDesktop.app/Contents/Resources/engine/*.py; do
+          for f in "build/Drift Workbench.app/Contents/Resources/engine/"*.py; do
             MODE=$(stat -f '%Lp' "$f")
             if [ $(( 0$MODE & 0022 )) -ne 0 ]; then
               echo "::error::group/world-writable engine file: $f (mode $MODE)"
@@ -287,7 +287,7 @@ jobs:
             fi
           done
           shopt -u nullglob
-          DIRMODE=$(stat -f '%Lp' build/NetMaxDesktop.app/Contents/Resources/engine)
+          DIRMODE=$(stat -f '%Lp' "build/Drift Workbench.app/Contents/Resources/engine")
           if [ $(( 0$DIRMODE & 0022 )) -ne 0 ]; then
             echo "::error::group/world-writable engine dir (mode $DIRMODE)"
             BAD=1
@@ -301,5 +301,5 @@ jobs:
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: NetMaxDesktop-app
-          path: desktop/build/NetMaxDesktop.app
+          path: desktop/build/Drift Workbench.app
           retention-days: 7

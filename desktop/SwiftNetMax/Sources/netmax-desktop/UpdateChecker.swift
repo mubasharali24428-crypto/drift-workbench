@@ -13,10 +13,10 @@ import Foundation
 
 enum UpdateChecker {
     /// Canonical release locations for THIS repo (single source of truth).
-    static let repoSlug = "mubasharali24428-crypto/netmax"
-    static let releasesPageURL = "https://github.com/mubasharali24428-crypto/netmax/releases"
-    static let feedbackPageURL = "https://github.com/mubasharali24428-crypto/netmax/discussions"
-    static let apiURL = "https://api.github.com/repos/mubasharali24428-crypto/netmax/releases/latest"
+    static let repoSlug = "mubasharali24428-crypto/drift-workbench"
+    static let releasesPageURL = "https://github.com/mubasharali24428-crypto/drift-workbench/releases"
+    static let feedbackPageURL = "https://github.com/mubasharali24428-crypto/drift-workbench/discussions"
+    static let apiURL = "https://api.github.com/repos/mubasharali24428-crypto/drift-workbench/releases/latest"
 
     /// Result of one check — pure data, unit-testable via `compare`.
     struct Outcome: Equatable {
@@ -243,9 +243,9 @@ enum UpdateCheckerTests {
         check(!offline.updateAvailable && offline.errorMessage != nil)
 
         // Canonical URLs point at the real repo (was github.com/netmax/…).
-        check(UpdateChecker.releasesPageURL.contains("mubasharali24428-crypto/netmax"))
-        check(UpdateChecker.feedbackPageURL.contains("mubasharali24428-crypto/netmax"))
-        check(UpdateChecker.apiURL.contains("api.github.com/repos/mubasharali24428-crypto/netmax"))
+        check(UpdateChecker.releasesPageURL.contains("mubasharali24428-crypto/drift-workbench"))
+        check(UpdateChecker.feedbackPageURL.contains("mubasharali24428-crypto/drift-workbench"))
+        check(UpdateChecker.apiURL.contains("api.github.com/repos/mubasharali24428-crypto/drift-workbench"))
 
         return failures
     }

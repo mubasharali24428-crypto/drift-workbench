@@ -2,7 +2,7 @@ import XCTest
 @testable import netmax_desktop
 
 final class UpdateCheckerTests: XCTestCase {
-    private let expectedSlug = "mubasharali24428-crypto/netmax"
+    private let expectedSlug = "mubasharali24428-crypto/drift-workbench"
 
     func testValidReleaseTagProducesExactGitHubURL() {
         guard let url = UpdateChecker.releaseURL(for: "v1.0.7") else {

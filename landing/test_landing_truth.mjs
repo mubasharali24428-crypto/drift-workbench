@@ -188,7 +188,7 @@ async function run() {
     );
     assert(
       releaseLinks.length > 0 &&
-        releaseLinks.every((url) => url.startsWith('https://github.com/mubasharali24428-crypto/netmax/releases')),
+        releaseLinks.every((url) => url.startsWith('https://github.com/mubasharali24428-crypto/drift-workbench/releases')),
       'Release download links point to official releases origin'
     );
 
@@ -196,7 +196,7 @@ async function run() {
     assert(
       licenseLinks.length > 0 &&
         licenseLinks.every((url) =>
-          url.startsWith('https://github.com/mubasharali24428-crypto/netmax/blob/main/LICENSE')
+          url.startsWith('https://github.com/mubasharali24428-crypto/drift-workbench/blob/main/LICENSE')
         ),
       'License link points to repository LICENSE file'
     );
