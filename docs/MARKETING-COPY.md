@@ -57,7 +57,7 @@ overclaiming): it sells the *skill you demonstrably have* — you wired 7 harnes
 
 ---
 
-## 2. Polar funding goal — "Fund NetMax's Apple Developer account"
+## 2. Polar funding goal — "Fund Drift Workbench's Apple Developer account"
 
 Polar (polar.sh) lets open-source projects state a funding goal. This goal is **$99**, it is real,
 and it unblocks a concrete, explainable deliverable (notarization). Link the goal from the repo
@@ -65,13 +65,13 @@ README + the npm package description + the landing page.
 
 | Field | Value |
 |---|---|
-| **Goal name** | Fund the Apple Developer account (notarized NetMax v1.0) |
+| **Goal name** | Fund the Apple Developer account (notarized Drift Workbench v1.0) |
 | **Amount** | **$99** |
 | **Type** | One-time goal (not recurring) |
 
 ### Goal description
 
-> NetMax is a local-first network diagnostics tool for AI coding agents — an MIT-licensed Python
+> Drift Workbench is a local-first network diagnostics tool for AI coding agents — an MIT-licensed Python
 > engine, a published npm MCP server (`@netmax/mcp-server`, 15 tools), and a macOS menu-bar app.
 >
 > The macOS app is currently ad-hoc signed because Apple's Developer Program costs **$99/yr**, and
@@ -107,5 +107,5 @@ README + the npm package description + the landing page.
 ## 4. The honest rule that keeps all of this clean
 
 No fake reviews, no astroturfed testimonials, no "97% satisfaction" invented numbers. If you use a
-testimonial it must be real (screenshot-able). This matches NetMax's core positioning, and it's
+testimonial it must be real (screenshot-able). This matches Drift Workbench's core positioning, and it's
 also just the durable way to sell software.

@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.mubasharali24428-crypto/netmax",
-  "description": "15 network-diagnostic tools for AI coding agents — speed test, DNS ranking, bufferbloat, WiFi, jitter, packet loss, multi-stream download, and system-wide speed ceiling. Local-first, honest limits.",
+  "description": "26 network-diagnostic tools for AI coding agents — speed test, DNS ranking, bufferbloat, WiFi, jitter, packet loss, multi-stream download, path trace, HTTP timing, IPv6, MTU, captive-portal check, and system-wide speed ceiling. Local-first, honest limits.",
   "repository": {
     "url": "https://github.com/mubasharali24428-crypto/netmax",
     "source": "github"
   },
-  "version": "1.0.7",
+  "version": "1.0.8",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@netmax/mcp-server",
-      "version": "1.0.7",
+      "identifier": "@drift-workbench/mcp-server",
+      "version": "1.0.8",
       "transport": {
         "type": "stdio"
       }

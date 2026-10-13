@@ -1,4 +1,4 @@
-# NetMax Landing Page Claims & Call-to-Action (CTA) Audit
+# Drift Workbench Landing Page Claims & Call-to-Action (CTA) Audit
 
 **Task:** C-01 (Align threat model and operator/privacy documentation)  
 **Document:** `docs/product/landing-claims.md`  
@@ -29,7 +29,7 @@ Each external target referenced in `landing/index.html` was verified against liv
 | `https://github.com/mubasharali24428-crypto/netmax/releases` | Install section DMG download | Official GitHub releases page for compiled DMG builds | **KEEP** |
 | `https://github.com/mubasharali24428-crypto/netmax/blob/main/LICENSE` | Footer license link | Points directly to MIT license file in repository root | **KEEP** |
 | `https://www.npmjs.com/package/@netmax/mcp-server` | Hero & footer npm link | Verified published npm package (package.json v1.0.7) | **KEEP** |
-| `https://mubasharali03.gumroad.com/l/yzkuez` | Pricing section buy CTA | Active Gumroad product link for NetMax Founding License ($29) | **KEEP** |
+| `https://mubasharali03.gumroad.com/l/yzkuez` | Pricing section buy CTA | Active Gumroad product link for Drift Workbench Founding License ($29) | **KEEP** |
 | `brew tap mubasharali24428-crypto/netmax && brew install --cask netmax` | Install section code block | Homebrew tap and cask formula configuration | **KEEP** |
 | `npx -y @netmax/mcp-server` | Hero & install code block | Verified npx command executing published MCP server package | **KEEP** |
 | `mubasharalikhowaja@proton.me` | Footer contact / refunds | Dedicated developer support email for refund requests | **KEEP** |

@@ -31,6 +31,49 @@ class TestAiSubcommand:
             netmax.run_ai_analysis("nope", {})
 
 
+class TestAnalysisInputs:
+    """An agent must be able to learn each analysis's inputs, and a wrong call
+    must fail as one message that repeats them, never as a traceback."""
+
+    def _listing(self, capsys):
+        netmax.main(["ai", "--list-analyses"])
+        return {ln.split()[0]: ln for ln in capsys.readouterr().out.splitlines()}
+
+    def test_listing_shows_required_and_optional_inputs(self, capsys):
+        lines = self._listing(capsys)
+        assert len(lines) == len(netmax.AI_ANALYSES)
+        assert "inputs: diagnostics:dict[str,Any] [tone:str]" in lines["explain"]
+        assert "inputs: (none)" in lines["isp_profile"]
+
+    def test_first_two_columns_are_unchanged(self, capsys):
+        # The capabilities resource reads name and implementation by whitespace.
+        for name, line in self._listing(capsys).items():
+            mod, cls, method = netmax.AI_ANALYSES[name]
+            assert line.split()[:2] == [name, f"{mod}.{cls}.{method}"]
+
+    def test_unloadable_module_degrades_to_the_plain_line(self, monkeypatch, capsys):
+        import importlib
+        real = importlib.import_module
+
+        def fake(name, *args, **kwargs):
+            if name == "netmax_ai_p2":
+                raise ImportError("partial install")
+            return real(name, *args, **kwargs)
+        monkeypatch.setattr(importlib, "import_module", fake)
+        lines = self._listing(capsys)
+        assert "inputs:" not in lines["explain"] and "inputs:" in lines["root_cause"]
+
+    def test_wrong_typed_input_is_a_message_naming_the_inputs(self):
+        with pytest.raises(netmax.NetMaxError,
+                           match=r"loss_pattern failed.*inputs: events:list\[dict\[str,Any\]\]"):
+            netmax.run_ai_analysis("loss_pattern", {"events": ["not-a-dict"]})
+
+    def test_missing_required_input_names_the_contract(self):
+        with pytest.raises(netmax.NetMaxError,
+                           match=r"cost_advice failed.*inputs: plan_mbps:float monthly_cost:float"):
+            netmax.run_ai_analysis("cost_advice", {})
+
+
 class TestSignatureTable:
     def test_every_dispatch_target_declares_a_signature(self):
         assert set(netmax.AI_ANALYSES) == set(netmax.AI_SIGNATURES)

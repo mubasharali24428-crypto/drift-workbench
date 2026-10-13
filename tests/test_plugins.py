@@ -82,7 +82,7 @@ def test_install_writes_three_configs_idempotently(tmp_path):
         data = json.loads(path.read_text())
         entry = data["mcpServers"]["netmax"]
         assert entry["command"] == "npx"
-        assert entry["args"] == ["-y", "@netmax/mcp-server"]
+        assert entry["args"] == ["-y", "@drift-workbench/mcp-server"]
     second = _run_install(tmp_path)
     assert second.returncode == 0
     for path in targets:  # still exactly one netmax entry each

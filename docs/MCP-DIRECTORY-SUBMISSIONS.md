@@ -1,4 +1,4 @@
-# MCP Directory Submissions — NetMax
+# MCP Directory Submissions — Drift Workbench
 
 **Status of this doc:** verified 2026-09-11. Everything here is a copy-paste kit for the
 **browser steps only you can do** (each directory gates on a login I can't perform).
@@ -9,11 +9,11 @@
 
 | Field | Value |
 |---|---|
-| **Name** | NetMax MCP Server |
+| **Name** | Drift Workbench MCP Server |
 | **npm package** | `@netmax/mcp-server` |
 | **GitHub** | https://github.com/mubasharali24428-crypto/netmax |
 | **Tagline** | 15 network-diagnostic tools for AI coding agents |
-| **Description** | NetMax gives AI coding agents real network measurements — speed test, DNS ranking, bufferbloat, WiFi signal, jitter, packet loss, multi-stream download, and a system-wide speed ceiling. Local-first, honest limits (never promises more than your ISP cap). |
+| **Description** | Drift Workbench gives AI coding agents real network measurements — speed test, DNS ranking, bufferbloat, WiFi signal, jitter, packet loss, multi-stream download, and a system-wide speed ceiling. Local-first, honest limits (never promises more than your ISP cap). |
 | **Tags** | `mcp`, `network`, `diagnostics`, `speed-test`, `dns`, `bufferbloat`, `wifi`, `ai`, `coding` |
 | **Transport** | stdio |
 | **Install** | `npx -y @netmax/mcp-server` |
@@ -35,7 +35,7 @@
 > https://smithery.ai/new (or the **Publish** button on the homepage).
 
 ### 1. Smithery
-- NetMax is a **local stdio** server, so Smithery's **"Local (MCPB Bundle)"** path applies
+- Drift Workbench is a **local stdio** server, so Smithery's **"Local (MCPB Bundle)"** path applies
   (not the URL path, which is for hosted Streamable-HTTP servers).
 - **The bundle is ready and smoke-tested.** Build it with:
   ```

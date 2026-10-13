@@ -1303,6 +1303,36 @@ def _load_history(path_spec: str, *, mode: str = "", mcp: bool = False) -> list[
     return netmax_history.build_coherent(rows, mode=mode)
 
 
+def _analysis_inputs(name: str) -> str | None:
+    """Input contract of one analysis, read from its method signature.
+
+    Required parameters appear bare, optional ones in [brackets]. None when the
+    module cannot be loaded: a partial install must still list and run the rest.
+    """
+    import inspect
+
+    entry = AI_ANALYSES.get(name)
+    if entry is None:
+        return None
+    module_name, class_name, method_name = entry
+    try:
+        method = getattr(getattr(importlib.import_module(module_name), class_name), method_name)
+        params = [p for p in inspect.signature(method).parameters.values() if p.name != "self"]
+    except Exception:
+        return None
+    parts = []
+    for p in params:
+        note = "" if p.annotation is inspect.Parameter.empty else ":" + str(p.annotation).replace(" ", "")
+        parts.append(f"{p.name}{note}" if p.default is inspect.Parameter.empty else f"[{p.name}{note}]")
+    return " ".join(parts) or "(none)"
+
+
+def _analysis_failure(name: str, exc: Exception) -> NetMaxError:
+    """A failed analysis as one message that also says what it expects."""
+    inputs = _analysis_inputs(name)
+    return NetMaxError(f"{name} failed: {exc}" + (f" (inputs: {inputs})" if inputs else ""))
+
+
 def run_ai_analysis(name: str, input_data: dict[str, Any],
                     history: list[dict[str, Any]] | None = None) -> Any:
     """Dispatch to one analyser by name and return its result."""
@@ -1378,8 +1408,8 @@ def run_ai_analysis(name: str, input_data: dict[str, Any],
     if bundle_key is None:
         try:
             return method(**kwargs)
-        except (OSError, ValueError, TypeError, KeyError) as exc:
-            raise NetMaxError(f"{name} failed: {exc}") from None
+        except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+            raise _analysis_failure(name, exc) from None
 
     positional = payload.pop(bundle_key, None)
     if positional is None:
@@ -1387,8 +1417,8 @@ def run_ai_analysis(name: str, input_data: dict[str, Any],
 
     try:
         return method(positional, **kwargs)
-    except (OSError, ValueError, TypeError, KeyError) as exc:
-        raise NetMaxError(f"{name} failed: {exc}") from None
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+        raise _analysis_failure(name, exc) from None
 
 
 def _power_state_for(battery_spec: str) -> Any:
@@ -1590,6 +1620,17 @@ def main(argv: list[str] | None = None) -> None:
     sp_jit = sub.add_parser("jitter", help="jitter (mean consecutive RTT delta)")
     sp_jit.add_argument("--count", type=int, default=10)
     sub.add_parser("wifi", help="WiFi RSSI/noise/channel")
+    sp_trace = sub.add_parser("trace", help="hop-by-hop path to a host (traceroute)")
+    sp_trace.add_argument("host")
+    sp_trace.add_argument("--max-hops", type=int, default=20)
+    sp_http = sub.add_parser("http-timing", help="DNS/TCP/TLS/server/transfer time for one URL")
+    sp_http.add_argument("url")
+    sp_http.add_argument("--count", type=int, default=1)
+    sub.add_parser("captive", help="captive-portal / interception check")
+    sub.add_parser("ipv6", help="IPv6 readiness vs IPv4")
+    sp_mtu = sub.add_parser("mtu", help="path MTU to a host")
+    sp_mtu.add_argument("--host", default="1.1.1.1")
+    sub.add_parser("context", help="VPN / offline detection")
     sp_exp = sub.add_parser("export", help="export newest run as CSV or JSON")
     sp_exp.add_argument("--fmt", choices=["csv", "json"], default="csv")
     sp_exp.add_argument("--out", required=True)
@@ -1850,6 +1891,49 @@ def main(argv: list[str] | None = None) -> None:
             info = netmetrics.wifi_info()
             for key, val in info.items():
                 print(f"{key}: {val}")
+        elif cmd == "trace":
+            import netmetrics
+            res = netmetrics.path_trace(args.host, _checked(args.max_hops, 1, 30, "--max-hops"))
+            hops = res["hops"]
+            print(f"path to {res['host']} ({res['target_ip'] or 'unresolved'}): "
+                  + (f"reached in {len(hops)} hops" if res["reached"]
+                     else f"target not reached within {len(hops)} hops"))
+            for h in hops:
+                rtt = f"{h['rtt_ms']:.1f} ms" if h["rtt_ms"] is not None else "?"
+                print(f"{h['hop']:>3}  " + (f"{h['ip']:<39} {rtt}" if h["ip"] else "*  (no reply)"))
+        elif cmd == "http-timing":
+            import netmetrics
+            res = netmetrics.http_timing(args.url, _checked(args.count, 1, 5, "--count"))
+            print(f"{res['origin']}: HTTP {res['http_code']} ({res['http_version']}) from "
+                  f"{res['remote_ip']}, median of {res['samples_ok']}/{res['samples']} samples")
+            for key, label in (("dns_ms", "dns"), ("tcp_ms", "tcp connect"),
+                               ("tls_ms", "tls handshake"), ("wait_ms", "server wait"),
+                               ("transfer_ms", "transfer"), ("total_ms", "total")):
+                if res[key] is not None:
+                    print(f"{label}: {res[key]:.1f} ms")
+        elif cmd == "captive":
+            import netmetrics
+            res = netmetrics.captive_portal_check()
+            print(f"captive portal: {res['verdict']}")
+            for e in res["endpoints"]:
+                print(f"{e['endpoint']}: {e['state']} ({e['detail']})")
+        elif cmd == "ipv6":
+            import netmetrics
+            res = netmetrics.ipv6_check()
+            print(f"ipv6: {res['verdict']}")
+            print(f"global address: {'yes' if res['global_address'] else 'no'}")
+            print(f"AAAA records resolve: {'yes' if res['aaaa_resolves'] else 'no'}")
+            for key, label in (("ipv6_connect_ms", "ipv6 connect"), ("ipv4_connect_ms", "ipv4 connect")):
+                print(f"{label}: " + (f"{res[key]:.1f} ms" if res[key] is not None else "failed"))
+        elif cmd == "mtu":
+            import netmetrics
+            res = netmetrics.mtu_probe(args.host)
+            print(f"path mtu to {res['host']}: {res['path_mtu']} bytes"
+                  + ("" if res["full_1500"] else " (below the standard 1500)"))
+        elif cmd == "context":
+            import netmax_netcontext
+            for key, val in netmax_netcontext.get_context().items():
+                print(f"{key}: {val}")
         elif cmd == "export":
             import netmax_export
             netmax_export.export_results(args.fmt, args.out)
@@ -1865,7 +1949,11 @@ def main(argv: list[str] | None = None) -> None:
                 else:
                     Path(args.out).write_text(_evm.manifest_to_json(manifest) + "\n")
             except ValueError as exc:
-                parser.error(str(exc))
+                # Clean one-line error, no argparse usage dump: the reason is
+                # the whole message. runEngineDirect surfaces stderr verbatim,
+                # so the MCP tool reports this line as-is.
+                print(f"export-evidence: {exc}", file=sys.stderr)
+                sys.exit(1)
             print(f"exported evidence ({args.fmt}) → {args.out}")
         elif cmd == "resolve":
             result = run_resolve_settings(
@@ -1949,7 +2037,9 @@ def main(argv: list[str] | None = None) -> None:
             if args.list_analyses:
                 width = max(len(k) for k in AI_ANALYSES)
                 for key, (mod, cls, method) in sorted(AI_ANALYSES.items()):
-                    print(f"{key:<{width}}  {mod}.{cls}.{method}")
+                    inputs = _analysis_inputs(key)
+                    print(f"{key:<{width}}  {mod}.{cls}.{method}"
+                          + (f"  inputs: {inputs}" if inputs else ""))
                 return
             import netmax_ai_provider
             if args.provider or args.model or args.llm_base:
@@ -2059,4 +2149,14 @@ def summarize_watch_history(history: list[dict]) -> dict:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        # A failed probe is a message, not a traceback: callers read the first
+        # lines of stderr, and the real reason sits at the end of a traceback.
+        # Run as a script, sibling modules import a second copy of this file,
+        # so their NetMaxError is a different class: match by name.
+        if type(exc).__name__ != "NetMaxError":
+            raise
+        print(f"netmax: {exc}", file=sys.stderr)
+        sys.exit(1)

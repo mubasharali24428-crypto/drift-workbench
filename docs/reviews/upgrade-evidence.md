@@ -464,13 +464,52 @@ Status: DONE.
 
 ## E-05-MCP — MCP Performance
 
-Status: DONE.
-- Startup p95: 103.01 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
+Status: DONE (2026-10-12). All five limits measured against the real server.
+- Startup p95: 103.01 ms (measured earlier, limit 500 ms): PASS
+- First-result p95: 3.47 s (measured 2026-10-12, limit 20 s): PASS
+- Cancellation: 0.064 s (measured 2026-10-12, limit 2 s): PASS
+- Peak RSS: 183 MiB (measured 2026-10-12, limit 512 MiB): PASS
+- Idle CPU: 0.0% (measured 2026-10-12, limit 1%): PASS
+
+### 2026-10-12 — full E-05 measurement run (raw numbers + method)
+
+Method: real runs against the real server (`desktop/netmax-mcp-server.mjs`
+1.0.8, direct engine mode, `/usr/bin/python3`), driven over MCP stdio with the
+SDK client (`@modelcontextprotocol/sdk` 1.30.0). Machine: MacBook Pro
+(M2 Max), macOS 26.7.2, node v26.10.0. Measurement scripts lived in
+`/tmp/e05/` (scratchpad, outside the repo); the committed perf test never
+writes into the repo.
+
+- First result: 30 sequential `packet_loss` calls (defaults: 10 ICMP pings to
+  1.1.1.1), 2 s spacing, wall time per call. 0 failures, no 429s seen
+  (ICMP has no rate limiting). Raw durations (ms), sorted:
+  2941, 2946, 2947, 2954, 2955, 2956, 2959, 2965, 2967, 2967,
+  2967, 2968, 2971, 2974, 2974, 2975, 2979, 2981, 2982, 2987,
+  2992, 2994, 2999, 3029, 3034, 3037, 3075, 3095, 3473, 4212.
+  p50 = 2975 ms, p95 = 3473 ms, max = 4212 ms. Limit p95 <= 20 s: PASS.
+- Cancellation: MCP `bufferbloat` (streams=4, seconds=60) aborted via
+  AbortController once the engine child was observed (+500 ms settle).
+  Time from abort() until the server's owned child was reaped (polled every
+  50 ms): 64 ms. Limit <= 2 s: PASS.
+- Peak RSS: one stdio server + two concurrent engine jobs (one via MCP
+  `bufferbloat` streams=4/seconds=20, one direct
+  `python3 -B netmax.py bloat --streams 4 --seconds 20`, the exact command
+  the server runs). Sampled the summed RSS of both process trees every
+  250 ms (98 samples; clean re-run — an earlier overlapping run measured
+  185.5 MiB, agreeing). Peak = 183 MiB; the server tree alone peaked at
+  128 MiB. Limit <= 512 MiB: PASS.
+- Idle CPU: fresh server, initialized, zero tool calls. 30 `ps -o %cpu`
+  samples over 61 s: avg 0.00%, max 0.0%; cputime 0:00.22 -> 0:00.22
+  (no measurable advance). Limit < 1%: PASS.
+
+Notes:
+- `dns_ranking` was tried first as the quick diagnostic but fails honestly in
+  this environment (UDP/53 to public resolvers unreachable; the engine raises
+  NetMaxError, no fabricated values) — unrelated to E-05; `packet_loss`
+  (ICMP) used instead.
+- The first measurement run briefly overlapped a duplicate process (stray,
+  killed); phases 3 and 4 were re-run clean with no other load on the
+  machine. Results agree across runs.
 
 ## E-06-RUN — Crash-Free Run Target Verification
 
@@ -505,113 +544,3 @@ Status: DONE.
 - Executed all audit commands: `git diff --check`, `ruff check .`, `python3 -m pytest -q`, `python3 desktop/bridge/engine_bridge.py selftest`, `npm ci && npm test && npm audit --audit-level=high` (both desktop and vscode extensions), `swift build && swift test`.
 - All checks, Python suites, and Swift tests passed beautifully.
 - No task remains BLOCKED, IN PROGRESS, REVIEW, or REJECTED.
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 102.71 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 102.82 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 103.93 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 102.68 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 102.49 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 102.44 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 102.18 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 102.13 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 103.25 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**
-
-
-## E-05-MCP — MCP Performance
-
-Status: DONE.
-- Startup p95: 101.96 ms
-- Diagnostic p95: 12.50 s
-- Cancellation: 0.15 s
-- Peak RSS: 245 MiB
-- Idle CPU: 0.2%
-- Result: **PASS**

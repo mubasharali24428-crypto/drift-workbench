@@ -123,3 +123,45 @@ def test_write_evidence_pdf(history_file, tmp_path):
     assert b"REDACTED-SECRET" in data  # redacted record detail line
     assert b"IPs anonymized: 1" in data  # redaction summary line
     assert data.rstrip().endswith(b"%%EOF")
+
+
+def _cli_history(monkeypatch):
+    """Hermetic 3-row history for CLI tests: no touch of the real history file."""
+    import netmax_export_manifest as evm
+
+    rows = [{"ts": 1700000000 + i, "mode": "baseline"} for i in range(3)]
+    monkeypatch.setattr(evm, "read_history_rows", lambda history_path=None: rows)
+
+
+def test_export_evidence_cli_out_of_range_is_one_line(monkeypatch, tmp_path, capsys):
+    import netmax
+
+    _cli_history(monkeypatch)
+    out = tmp_path / "evidence.json"
+    with pytest.raises(SystemExit) as excinfo:
+        netmax.main(["export-evidence", "--records", "rec-99",
+                     "--fmt", "json", "--out", str(out)])
+    assert excinfo.value.code == 1
+    captured = capsys.readouterr()
+    assert captured.err.splitlines() == [
+        "export-evidence: record id 'rec-99' out of range: history holds 3 records"
+    ]
+    assert "usage:" not in captured.err
+    assert not out.exists()
+
+
+def test_export_evidence_cli_malformed_id_is_one_line(monkeypatch, tmp_path, capsys):
+    import netmax
+
+    _cli_history(monkeypatch)
+    out = tmp_path / "evidence.json"
+    with pytest.raises(SystemExit) as excinfo:
+        netmax.main(["export-evidence", "--records", "bogus",
+                     "--fmt", "json", "--out", str(out)])
+    assert excinfo.value.code == 1
+    captured = capsys.readouterr()
+    assert captured.err.splitlines() == [
+        "export-evidence: invalid record id 'bogus': expected 'rec-<index>'"
+    ]
+    assert "usage:" not in captured.err
+    assert not out.exists()
