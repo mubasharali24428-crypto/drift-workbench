@@ -1,189 +1,216 @@
+<div align="center">
+
+<img src="docs/images/logo.svg" alt="Drift Workbench" width="72" height="72">
+
 # Drift Workbench
 
-> Network diagnostics for AI coding agents. Local-first, honest limits.
+**Network diagnostics your AI coding agent can run itself.**
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![npm](https://img.shields.io/npm/v/@drift-workbench/mcp-server)](https://www.npmjs.com/package/@drift-workbench/mcp-server)
-[![GitHub stars](https://img.shields.io/github/stars/mubasharali24428-crypto/netmax?style=social)](https://github.com/mubasharali24428-crypto/netmax)
-[![Landing page](https://img.shields.io/badge/🌐-landing%20page-2f6f4f)](https://drift.mubasharbuilds.com)
-[![Buy $29](https://img.shields.io/badge/💳-Founding%20License%20%2429-c0392b)](https://mubasharali03.gumroad.com/l/yzkuez)
+Local-first measurements for throughput, bufferbloat, jitter, packet loss and DNS,
+exposed as MCP tools, with timestamped evidence you can hand to anyone.
 
-**Website:** https://drift.mubasharbuilds.com  
-**npm (MCP server):** `npx -y @drift-workbench/mcp-server`  
-**macOS app:** `brew tap mubasharali24428-crypto/drift-workbench && brew install --cask drift-workbench`
+[![npm](https://img.shields.io/npm/v/@drift-workbench/mcp-server?color=22C55E&label=npm&labelColor=0B0C0E)](https://www.npmjs.com/package/@drift-workbench/mcp-server)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22C55E?labelColor=0B0C0E)](LICENSE)
+[![MCP](https://img.shields.io/badge/MCP-server-22C55E?labelColor=0B0C0E)](https://modelcontextprotocol.io)
+[![macOS 13+](https://img.shields.io/badge/macOS-13%2B-22C55E?labelColor=0B0C0E)](#desktop-app)
+[![Local-first](https://img.shields.io/badge/telemetry-none-22C55E?labelColor=0B0C0E)](#privacy-and-security)
 
-**20 network-diagnostic tools for AI coding agents.** Run speed tests, DNS ranking, bufferbloat
-grading, jitter, packet loss, WiFi diagnostics — all from inside your AI coding agent.
+[Quickstart](#quickstart) ·
+[Tools](#tools) ·
+[How it works](#how-it-works) ·
+[Desktop app](#desktop-app) ·
+[Privacy](#privacy-and-security) ·
+[Development](#development)
 
-**Honest bandwidth maximizer for macOS.** Drift Workbench squeezes every bit your plan
-actually pays for: it measures true single-stream throughput, claims a larger
-per-flow share of a *contended* WiFi pipe using N parallel TCP streams
-(standard fairness, no tricks), ranks public DNS resolvers by latency, and
-grades your connection's bufferbloat on the Waveform A+–F rubric.
+<br>
 
-## Honest limits — read this first
+<img src="docs/images/app-dashboard.png" alt="The Drift Workbench macOS app dashboard: Run Quick Test, test length and target controls, a live throughput dial and summary cards for the latest run" width="860">
 
-- **Drift Workbench cannot exceed your ISP cap.** No software can — the cap is enforced
-  on the provider's side. Anyone promising "10x your speed" is selling scamware.
-- Gains from `turbo`/`boost` appear **only when the pipe is contended** (other
-  devices are pulling traffic). On an idle line, baseline is already the plan.
-- Router-side QoS caps override everything here; only the router admin or a
-  plan upgrade changes those.
-- Zero-throughput windows on shared WiFi are real (airtime starvation). Drift Workbench
-  reports them as dropouts rather than inventing a flattering percentage.
+<sub>The macOS app, private preview build.</sub>
 
-## MCP Server — use from any AI coding agent (free, MIT)
+</div>
 
-Install in 10 seconds — works in Claude Code, Cursor, Codex CLI, Gemini, LM Studio, and more:
+<br>
+
+## Why
+
+An AI coding agent can read your code, run your tests and open your files. It cannot tell
+whether the network is the reason a build, a download or an API call is slow, because it
+has no way to measure it. Drift Workbench gives it that: a small set of measurement tools
+it can call directly, answers it can reason about, and an evidence export when you need to
+show someone else.
+
+- **Measured, not guessed.** Every number comes from a probe that ran on your machine.
+- **Local-first.** No accounts, no telemetry. Nothing leaves your machine unless you send it.
+- **Honest limits.** It reports what the line delivered and says plainly when that falls short.
+
+## Quickstart
+
+Requires Node.js, Python 3 and `curl`. Nothing else to install.
 
 ```bash
 npx -y @drift-workbench/mcp-server
 ```
 
-Then ask your agent to run `full_diagnostics` — it will measure your real network speed, DNS
-latency, bufferbloat grade, jitter, packet loss, and WiFi quality in a single call.
-
-**17 tools:** `measure_speed` · `dns_ranking` · `bufferbloat` · `upload_speed` ·
-`packet_loss` · `jitter` · `wifi_info` · `download_file` · `eco_bloat` ·
-`full_diagnostics` · `diagnostic_summary` · `boost` · `parallel_diagnostics` ·
-`session_info` · `strict_limit` · `ai_analyze` · `list_analyses`
-
-`ai_analyze` is the reachability surface for the whole P0–P2 AI layer — 22
-analysers (`netmax ai --list-analyses`) covering root-cause classification,
-bufferbloat/WiFi/DNS/loss/jitter attribution, trend forecasting, hardware
-health, traffic-shaping signatures, cost advice and a sandboxed metric-rule
-DSL. It analyses measurements you already have; it never runs one and never
-changes system state.
-
-### Desktop app (macOS)
+Add it to your agent. For Claude Code:
 
 ```bash
-brew tap mubasharali24428-crypto/netmax
-brew install --cask netmax
+claude mcp add drift-workbench -- npx -y @drift-workbench/mcp-server
 ```
 
-Or visit the [landing page](https://drift.mubasharbuilds.com) for the $29
-Founding License: menu-bar app with history, scheduled tests, and anomaly detection.
+For any other MCP client, add this to its server configuration:
 
----
-
-## Install & run (Python engine — for developers)
-
-No package install needed — it's plain Python + curl. Any Python 3.10+
-works; point `NETMAX_PYTHON` at a specific interpreter if the default
-`python3` lacks optional extras (matplotlib for `measure.py` charts,
-Tkinter for `netmax_gui.py`):
-
-```bash
-export NETMAX_PYTHON=/path/to/python   # optional override
-cd ~/netmax
-$NETMAX_PYTHON netmax.py full --seconds 10      # or just: python3 netmax.py full --seconds 10
+```json
+{
+  "mcpServers": {
+    "drift-workbench": {
+      "command": "npx",
+      "args": ["-y", "@drift-workbench/mcp-server"]
+    }
+  }
+}
 ```
 
-Requires: Python 3.10+, `curl`, and network access for live measurements.
+Then ask your agent something like *"Run a full diagnostic and tell me whether the network
+or my code is the bottleneck."*
 
-Versioning: Python package version in `pyproject.toml`; MCP npm package version in `desktop/package.json`.
+## Tools
 
-## CLI examples
+The published package, `@drift-workbench/mcp-server@1.0.8`, ships **20 tools**.
 
-```bash
-python3 netmax.py baseline --seconds 8    # single-stream Mbps
-python3 netmax.py turbo --streams 6       # parallel-stream share
-python3 netmax.py boost --streams 4       # baseline vs turbo, gain %
-python3 netmax.py dns                     # rank resolvers by latency
-python3 netmax.py bloat --seconds 12      # bufferbloat grade (A+–F)
-python3 netmax.py full --seconds 10       # everything + verdict
+| | Tool | What it does |
+|---|---|---|
+| **Measure** | `measure_speed` | Download throughput with one or more parallel streams |
+| | `upload_speed` | Upload throughput in Mbps |
+| | `packet_loss` | Packet loss percentage |
+| | `jitter` | Variation in packet arrival time |
+| | `wifi_info` | Signal strength, noise and channel from the system profiler |
+| | `download_file` | Multi-stream ranged download of one HTTP resource |
+| **Diagnose** | `bufferbloat` | Latency increase under load, graded A+ to F |
+| | `eco_bloat` | A light bufferbloat estimate that moves about 100 KB |
+| | `dns_ranking` | Public DNS resolvers ranked by median latency |
+| | `full_diagnostics` | Throughput, DNS and bufferbloat in a single call |
+| | `diagnostic_summary` | A short health overview |
+| | `boost` | Baseline against parallel-stream throughput, with the gain |
+| | `parallel_diagnostics` | Several independent tests run concurrently in one call |
+| **Evidence** | `evidence_export` | A redacted, timestamped evidence bundle (JSON), with a SHA-256 per record |
+| | `ai_analyze` | Analysis of measurements you already have. It never measures or changes the system |
+| | `list_analyses` | The analyses `ai_analyze` can run, with their inputs |
+| **Control** | `strict_limit` | A system-wide download ceiling for a set time (macOS, needs root) |
+| | `policy_bound_workflow` | Fixed, envelope-checked measurement sequences |
+| | `fleet_drift_workbench` | Fleet baselines and drift checks against allowlisted HTTPS peers |
+| | `session_info` | Server uptime and call count |
+
+**In the source, not yet published to npm (26 tools in total):** `path_trace`, `http_timing`,
+`captive_portal_check`, `ipv6_check`, `mtu_probe` and `network_context`.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["AI coding agent<br/>Claude Code, Cursor, Codex, ..."] -- "MCP (stdio)" --> B["Drift Workbench<br/>MCP server (Node)"]
+    B -- "bridge" --> C["Measurement engine<br/>(Python + curl)"]
+    C --> D[("History<br/>local only")]
+    D --> E["evidence_export<br/>redacted JSON"]
+    D --> F["macOS app<br/>dashboard and reports"]
 ```
 
-### Diagnostics (v0.4)
+The MCP server and the macOS app share one measurement engine, so a number your agent reads
+is the same number the app shows. History is stored on your machine and every export is
+redacted before it leaves the engine. The evidence bundle carries a SHA-256 per record and
+contains no IPv4 or MAC addresses.
 
-```bash
-python3 netmax.py upload --seconds 10     # upload speed (Mbps)
-python3 netmax.py loss                    # packet-loss percent
-python3 netmax.py jitter                  # jitter (ms)
-python3 netmax.py wifi                    # RSSI / noise / channel
-python3 netmax.py export --fmt csv --out out.csv
-python3 netmax.py watch --interval 30     # continuous monitor
-```
+**Measured on one M2 Max Mac** (MCP server limits, not a guarantee for other hardware):
 
-### Speed cap (v1.0.7)
-
-```bash
-python3 netmax.py limit --mbps 2 --seconds 1800   # hold 2 Mbps for 30 min (user space)
-python3 netmax.py limit --mbps 10 --streams 4     # cap held across all streams
-sudo python3 netmax.py limit --strict --mbps 5 --seconds 60  # kernel ceiling via dnctl+pf
-```
-
-`limit` pins the AGGREGATE download rate at the chosen Mbps in user space.
-`limit --strict` enforces a true kernel-level ceiling using macOS `dnctl` dummynet
-pipes and packet filter (`pf`) anchors, requiring root privileges (`sudo`). It uses
-exclusive process locking (`/var/run/netmax-shaping.lock`) and transactional rollback
-to ensure rules are cleanly removed when execution finishes.
-
-### GUI
-
-```bash
-python3 netmax_gui.py
-```
-
-Tkinter desktop app wrapping the CLI; each command runs in an isolated
-subprocess so a failed measurement can never take down the UI.
-
-## Security & Privacy Architecture
-
-Drift Workbench follows strict local-first and bounded-operation principles:
-- **Local-first data**: Historical runs are stored locally on your Mac in
-  `~/Library/Application Support/NetMaxDesktop/` with POSIX `0600` permissions.
-- **Network listener boundaries**: The desktop UI and CLI listen on no network ports.
-  The optional MCP HTTP transport (`--http`) binds to loopback (`127.0.0.1:8808`) by default;
-  binding to non-loopback requires a mandatory secret bearer token (`NETMAX_TOKEN`).
-- **Privileged execution**: System-wide shaping (`limit --strict` / `strict_limit`) requires
-  root privileges and executes with pre-elevation ownership checks, atomic state tracking,
-  and automatic cleanup.
-- **Remote AI privacy**: Remote AI analysis is off by default and can only be enabled
-  in Desktop Settings (**Settings → Remote AI Privacy → Allow remote AI analysis**).
-  When enabled, requests transmit only 11 allowlisted numeric/enum metrics — never raw history,
-  prompts, or network credentials.
-- **Data retention & permanent erase**: Includes automated retention archiving, reversible
-  clear with a 30-second holding bin undo window, and explicit irreversible permanent erase.
-
-## Tests
-
-906 offline tests in the default suite (network fully mocked — safe to run
-anywhere), including the 118 in the engine_store / bridge suites:
-
-```bash
-cd ~/netmax-app
-python3 -m pytest            # full suite (513: engine + GUI + modules + bridge + store)
-python3 -m pytest tests/test_netmax.py -v        # engine only
-python3 -m pytest test_netmax_gui.py -v          # GUI only
-python3 -m pytest desktop/engine_store/test_store.py -q   # SQLite layer (38)
-python3 -m pytest desktop/bridge/test_engine_bridge.py -q # bridge (65)
-python3 -m ruff check .       # lint gate
-```
-
-Swift offline self-checks (LicenseGate, HistoryStore, Timeline, …):
-
-```bash
-bash desktop/scripts/run_swift_selftests.sh
-```
-
-## Project structure
-
-| Path | Role |
+| Limit | Result |
 |---|---|
-| `netmax.py` | Engine + CLI: `baseline / turbo / boost / dns / bloat / full / upload / loss / jitter / wifi / export / watch` |
-| `netmax_gui.py` | Tkinter desktop app wrapping the CLI (progress bar, elapsed counter, export viewer) |
-| `netmax_upload.py` | Upload-speed probe module |
-| `netmetrics.py` | Packet loss, jitter, WiFi info modules |
-| `netmax_export.py` | CSV/JSON export of measurement runs |
-| `netmax_watch.py` | Continuous monitor loop |
-| `measure.py` | Live measurement run → `results/<ts>/results.json` + chart + `results/history.json` |
-| `tests/` | Offline pytest suites for all modules |
-| `docs/FEATURE-SPECS.md` | Implementation specs for the v0.4 feature set |
-| `PROJECT_LOG.md` | Build log, verified results, debugging notes |
+| First result, p95 | 3.47 s |
+| Cancellation | 0.064 s |
+| Peak memory | 183 MiB |
+| Idle CPU | 0.0% |
 
-## Implemented in v0.4
+## Desktop app
 
-`loss`, `jitter`, `wifi`, `upload`, `export`, and `watch` are now real CLI
-modes — see Diagnostics above. Remaining ideas live in docs/FEATURE-SPECS.md.
+A native macOS app (macOS 13 or later, Apple Silicon and Intel) built on the same engine:
+quick tests, a held target rate, history, scheduled runs, anomaly detection, and
+timestamped evidence reports.
+
+- **Founding License: $29, one payment.** A 14-day trial runs first, bound to your machine,
+  with no account. [Get it on Gumroad](https://mubasharali03.gumroad.com/l/yzkuez).
+- **The MCP server is free and stays free.**
+- **Status: private preview.** Public launch is paused. The app is not yet notarized, so
+  macOS asks you to confirm the first open.
+
+## Honest limits
+
+- Drift Workbench cannot exceed your ISP cap. No software can. It reports what your line
+  delivered and says so when that falls short of the plan.
+- Parallel-stream gains appear only when the pipe is contended. On an idle line the
+  single-stream baseline already equals the plan.
+- Router-side QoS limits override everything here.
+- Zero-throughput windows on shared Wi-Fi are real. They are reported as dropouts, not
+  smoothed into a flattering percentage.
+- Windows support is limited. The probe parsers are validated against real Windows 11
+  captures; the full Windows test suite has not been run yet.
+
+## Privacy and security
+
+- **Local-first data.** Run history lives in `~/Library/Application Support/NetMaxDesktop/`
+  with `0600` permissions.
+- **No listeners by default.** The CLI and desktop app open no network ports. The optional
+  MCP HTTP transport (`--http`) binds to `127.0.0.1:8808`; a non-loopback bind requires a
+  bearer token.
+- **Privileged actions are bounded.** `strict_limit` needs root, checks ownership before
+  elevating, tracks its state atomically and removes its rules when it finishes.
+- **Remote AI is off by default.** It can be enabled only in the desktop app (Settings,
+  Remote AI Privacy). When enabled it sends allowlisted aggregate metrics only, never raw
+  history, prompts, SSIDs, hostnames or addresses. See
+  [`docs/privacy`](docs/privacy) and [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md).
+- **Retention you control.** Archive by age, undo a clear within 30 seconds, or erase
+  permanently.
+
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| [`desktop/`](desktop) | MCP server (`netmax-mcp-server.mjs`), the shared engine, the engine bridge and the native macOS app (`SwiftNetMax`) |
+| [`netmax.py`](netmax.py) and `netmax_*.py` | The measurement engine and its CLI modules |
+| [`trial-server-worker/`](trial-server-worker) | Cloudflare Worker for the trial and license registry |
+| [`website-v3/`](website-v3) | The marketing site (static Next.js export) |
+| [`landing/`](landing) | Static landing page |
+| [`docs/`](docs) | Specs, threat model, privacy contracts and test plans |
+| [`tests/`](tests) | Offline test suites, network fully mocked |
+
+> Some file names, environment variables (`NETMAX_*`) and the app's data folder keep the
+> earlier **NetMax** name so existing installs and configurations keep working.
+
+## Development
+
+Run the engine directly, with no package install:
+
+```bash
+python3 netmax.py full --seconds 10      # everything plus a verdict
+python3 netmax.py bloat --seconds 12     # bufferbloat grade
+python3 netmax.py dns                    # rank resolvers by latency
+python3 netmax.py limit --mbps 2 --seconds 1800   # hold a fixed rate
+```
+
+Run the tests:
+
+```bash
+python3 -m pytest                          # engine, GUI, modules, bridge and store
+python3 -m ruff check .                    # lint
+bash desktop/scripts/run_swift_selftests.sh   # native app self-checks
+```
+
+Build the macOS app:
+
+```bash
+bash desktop/scripts/build_app.sh          # produces desktop/build/Drift Workbench.app
+```
+
+Release history is in [`RELEASE-NOTES.md`](RELEASE-NOTES.md).
+
+## License
+
+[MIT](LICENSE). Built by Mubashar Ali. Questions: mubashar@mubasharbuilds.com.

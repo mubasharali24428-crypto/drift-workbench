@@ -1,5 +1,58 @@
 # Release Notes
 
+## Unreleased
+
+**Paid licenses (desktop app, 2026-10-12)**
+- License keys are now server-verified: Settings → Activate calls
+  `POST /v1/license/activate` on the registry worker, which checks the key
+  against Gumroad, binds a seat to this Mac, and returns an Ed25519 token.
+  The app verifies the token offline (public key only, embedded) and re-checks
+  with the worker on launch and about every 24h while online — refunds and
+  revocations propagate on the next check. Offline or 503 keeps the last
+  verified state; revocation is non-destructive (data never touched).
+- The old offline 5×4 key-format check is gone; the key format is the server's
+  business. Until MAX embeds the real public key the placeholder fails closed
+  (no unverified Pro).
+
+**Hygiene (2026-10-12)**
+- The MCP server reads its version from `desktop/package.json` (single source;
+  was hardcoded in four places).
+- `export-evidence` prints one clean stderr line and exits 1 on a bad record
+  ID (no argparse usage dump).
+- MCP performance limits E-05 are now measured, not placeholders: first-result
+  p95 3.47 s (≤20 s), cancellation 0.064 s (≤2 s), peak RSS 183 MiB (≤512 MiB),
+  idle CPU 0.0% (<1%).
+- `desktop/README.md` is user-facing install/usage only; internal
+  build/verify/distribution notes moved to `desktop/docs/BUILD-NOTES.md`.
+- Windows test plan added (`docs/WINDOWS-TEST-PLAN.md`); the suite itself has
+  not been run.
+
+## 1.0.8
+
+**Desktop app**
+- The app is renamed Drift Workbench (bundle `Drift Workbench.app`; the bundle ID, executable and
+  data folder are unchanged). User-visible "NetMax" text is rebranded.
+- Settings analytics are computed from saved run history instead of hard-coded values.
+- The in-app changelog now lists real release notes. The placeholder testimonials are removed.
+- Speed Limit results show the readable text instead of the raw `{"raw": ...}` wrapper.
+
+**Engine**
+- Windows probe layer: `netmax_platform` adds per-OS ping commands and output parsers, and
+  `netmetrics` uses it. Validated against a real Windows 11 capture (0.0% loss, 3.0 ms jitter).
+  The full Windows suite has not been run yet.
+- `evidence_export` works: the MCP tool calls the engine's `export-evidence` command, which the
+  packaged 1.0.7 engine did not have. The engine now ships that command and the modules it needs.
+
+**Packaging**
+- The shipped engine (`desktop/engine/`) is synced with the canonical modules and now includes
+  `netmax_platform`, `netmax_export_manifest`, `netmax_throttle`, `netmax_wifievents` and
+  `netmax_eventstore`.
+- `netmax_platform` is listed in `pyproject.toml` `py-modules`; `netmax audit --strict` passes again.
+- The test suite now fails on mirror drift, and on a mirrored module that imports a module that
+  is not mirrored.
+- The npm README uses the Drift Workbench name and lists all 20 tools; `server.json` and the mcpb
+  manifest now say 20 tools under `@drift-workbench/mcp-server`.
+
 ## 1.0.7
 
 **Engine / bridge**

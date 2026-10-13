@@ -54,3 +54,8 @@ node_modules/
 coverage.xml
 tmp/
 output/
+
+# Rename backups and local databases
+*.bak-rename*
+*.bak-winadapter
+trial_server/trial_registry.db
